@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 256px; height: 256px; overflow: hidden; background: transparent; }
+  svg { width: 256px; height: 256px; display: block; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none">
+  <defs>
+    <linearGradient id="gbgOrangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF7A1A" />
+      <stop offset="100%" stop-color="#EF6C1E" />
+    </linearGradient>
+  </defs>
+
+  <!-- Dark Base Tile for Universal Contrast (Light & Dark Browser Tabs) -->
+  <rect width="256" height="256" rx="60" fill="#0A0E17" />
+  <rect width="250" height="250" x="3" y="3" rx="57" stroke="#EF6C1E" stroke-opacity="0.45" stroke-width="3" />
+
+  <!-- GBG Cabs Official Emblem: Orange Pin + Rider + White Scooter Handlebars -->
+  <g transform="translate(28, 22)">
+    <!-- White Scooter Handlebars & Front Chassis -->
+    <g stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M42 96 C26 96 24 82 38 78 C46 76 48 84 46 92" />
+      <path d="M158 96 C174 96 176 82 162 78 C154 76 152 84 154 92" />
+      <path d="M48 106 C44 122 44 136 45 152 C45 156 50 158 54 158 H70 C74 158 76 154 76 150 V142 H124 V150 C124 154 126 158 130 158 H146 C150 158 155 156 155 152 C156 136 156 122 152 106 C148 94 136 88 124 86 H76 C64 88 52 94 48 106 Z" />
+    </g>
+
+    <path d="M54 116 C54 105 65 102 74 108 C70 120 61 122 54 116 Z" fill="#FFFFFF" />
+    <path d="M146 116 C146 105 135 102 126 108 C130 120 139 122 146 116 Z" fill="#FFFFFF" />
+    <path d="M74 74 C82 66 118 66 126 74" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" fill="none" />
+
+    <!-- Location Pin in Vibrant Orange -->
+    <path
+      d="M100 12 C58 12 34 44 34 82 C34 116 88 150 100 162 C112 150 166 116 166 82 C166 44 142 12 100 12 Z"
+      stroke="url(#gbgOrangeGrad)"
+      stroke-width="17"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      fill="none"
+    />
+
+    <!-- Rider Head -->
+    <circle cx="100" cy="58" r="23" fill="url(#gbgOrangeGrad)" />
+
+    <!-- "GO BABY GO" Text -->
+    <g transform="translate(0, 186)">
+      <text x="24" y="0" fill="#EF6C1E" font-size="18" font-weight="900" font-family="'Inter', system-ui, -apple-system, sans-serif" letter-spacing="0.05em">
+        GO
+      </text>
+      <text x="68" y="0" fill="#FFFFFF" font-size="18" font-style="italic" font-weight="900" font-family="'Inter', system-ui, -apple-system, sans-serif" letter-spacing="0.06em">
+        BABY
+      </text>
+      <text x="144" y="0" fill="#EF6C1E" font-size="18" font-weight="900" font-family="'Inter', system-ui, -apple-system, sans-serif" letter-spacing="0.05em">
+        GO
+      </text>
+    </g>
+  </g>
+</svg>
+</body>
+</html>
