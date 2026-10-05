@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <!-- ============================================================================== -->
+  <!-- GoBabyGo Cabs (GBG EV & GBG X) - Digital Invoice Artifacts & Vector Stamps     -->
+  <!-- ============================================================================== -->
+
+  <!-- 1. OFFICIAL BRAND LOGO MARK (Car + Falling Pin) -->
+  <symbol id="gbg-logo-mark" viewBox="0 0 200 200">
+    <path d="M100 12 C60 12 36 42 36 78 C36 110 88 142 100 154 C112 142 164 110 164 78 C164 42 140 12 100 12 Z" stroke="#EF6C1E" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="100" cy="56" r="21" fill="#EF6C1E" />
+    <path d="M48 106 C44 122 44 136 45 152 C45 156 50 158 54 158 H70 C74 158 76 154 76 150 V142 H124 V150 C124 154 126 158 130 158 H146 C150 158 155 156 155 152 C156 136 156 122 152 106 C148 94 136 88 124 86 H76 C64 88 52 94 48 106 Z" stroke="#0F172A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="68" cy="126" r="8" fill="#0F172A" />
+    <circle cx="132" cy="126" r="8" fill="#0F172A" />
+  </symbol>
+
+  <!-- 2. "PAID" STAMP BADGE -->
+  <symbol id="stamp-paid" viewBox="0 0 280 100">
+    <g transform="rotate(-6 140 50)">
+      <rect x="10" y="10" width="260" height="80" rx="14" fill="none" stroke="#10B981" stroke-width="6" stroke-dasharray="240 10 20 10" opacity="0.9"/>
+      <rect x="18" y="18" width="244" height="64" rx="8" fill="rgba(16, 185, 129, 0.08)"/>
+      <text x="140" y="62" font-family="'Inter', sans-serif" font-weight="900" font-size="34" fill="#10B981" text-anchor="middle" letter-spacing="4">
+        PAID
+      </text>
+    </g>
+  </symbol>
+
+  <!-- 3. "DUE" STAMP BADGE -->
+  <symbol id="stamp-due" viewBox="0 0 280 100">
+    <g transform="rotate(-6 140 50)">
+      <rect x="10" y="10" width="260" height="80" rx="14" fill="none" stroke="#EF6C1E" stroke-width="6" opacity="0.9"/>
+      <rect x="18" y="18" width="244" height="64" rx="8" fill="rgba(239, 108, 30, 0.08)"/>
+      <text x="140" y="62" font-family="'Inter', sans-serif" font-weight="900" font-size="32" fill="#EF6C1E" text-anchor="middle" letter-spacing="4">
+        PAYMENT DUE
+      </text>
+    </g>
+  </symbol>
+
+  <!-- 4. OFFICIAL COMPANY SEAL & VERIFICATION BADGE -->
+  <symbol id="company-seal" viewBox="0 0 200 200">
+    <circle cx="100" cy="100" r="92" fill="none" stroke="#2563EB" stroke-width="4" stroke-dasharray="6 3"/>
+    <circle cx="100" cy="100" r="82" fill="rgba(37, 99, 235, 0.05)" stroke="#2563EB" stroke-width="2"/>
+    <path id="curve-seal" d="M 30,100 A 70,70 0 1,1 170,100" fill="none"/>
+    <text font-family="'Inter', sans-serif" font-size="11" font-weight="800" fill="#2563EB" letter-spacing="2">
+      <textPath href="#curve-seal" startOffset="50%" text-anchor="middle">
+        GOBABYGO CABS PVT LTD
+      </textPath>
+    </text>
+    <path d="M100 65 L108 82 L126 84 L112 96 L116 114 L100 104 L84 114 L88 96 L74 84 L92 82 Z" fill="#2563EB"/>
+    <text x="100" y="136" font-family="'Inter', sans-serif" font-size="9" font-weight="700" fill="#1E293B" text-anchor="middle" letter-spacing="1">
+      SECTOR 62 • NOIDA
+    </text>
+    <text x="100" y="150" font-family="'Inter', sans-serif" font-size="8" font-weight="900" fill="#EF6C1E" text-anchor="middle" letter-spacing="2">
+      VERIFIED EV MOBILITY
+    </text>
+  </symbol>
+
+  <!-- 5. 100% GREEN EV BADGE -->
+  <symbol id="green-mobility-badge" viewBox="0 0 180 50">
+    <rect x="2" y="2" width="176" height="46" rx="23" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+    <circle cx="25" cy="25" r="14" fill="#10B981"/>
+    <path d="M21 25 L24 28 L30 20" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <text x="46" y="25" font-family="'Inter', sans-serif" font-size="10" font-weight="800" fill="#065F46" letter-spacing="0.5">
+      ZERO EMISSION
+    </text>
+    <text x="46" y="37" font-family="'Inter', sans-serif" font-size="9" font-weight="600" fill="#047857">
+      100% Clean Electric Fleet
+    </text>
+  </symbol>
+</svg>

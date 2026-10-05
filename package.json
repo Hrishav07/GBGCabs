@@ -1,10 +1,12 @@
 {
-  "name": "luxury-watch-store",
+  "name": "gbg-cabs",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "php -S localhost:8000 backend/router.php",
+    "migrate": "php backend/database/migrate.php",
     "build": "vite build",
     "preview": "vite preview"
   },

@@ -1,4 +1,7 @@
-import React, { useState, useEffect, Component, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, Component, useRef, useCallback } from "react";
+import { flushSync } from "react-dom";
+
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 import {
   Menu,
   X,
@@ -28,11 +31,31 @@ import {
   BatteryCharging,
   Globe2,
   Building2,
-  MapPin
+  MapPin,
+  Lock,
+  ShieldCheck,
+  TrendingUp,
+  Award,
+  Store,
+  Truck,
+  Wrench,
+  BarChart3,
+  Layers
 } from "lucide-react";
+
+import {
+  BookingModal,
+  InquiryModal,
+  AdminDashboardModal,
+  FooterNewsletter
+} from "./GBGModals.jsx";
 
 import gbgEvLogoImg from "./assets/images.jpg";
 import gbgxLogoImg from "./assets/Screenshot 2026-08-31 150402.png";
+import gbgEvEmblemImg from "./assets/gbg_ev_emblem.png";
+import gbgEvLogoCleanImg from "./assets/gbg_ev_logo_clean.png";
+import gbgxLogoWhiteImg from "./assets/gbgx_logo_white.png";
+import gbgxLogoBlueImg from "./assets/gbgx_logo_blue.png";
 import gbgScooterImg from "./assets/Screenshot 2026-09-11 173032.png";
 import orangeVespaImg from "./assets/orange_vespa_scooter.png";
 import gbgDeliveryScooterImg from "./assets/gbg_ev_delivery_scooter.png";
@@ -46,6 +69,11 @@ import gbgHqOfficeImg from "./assets/gbg_hq_office.jpg";
 import gbgEvFleetPartnersImg from "./assets/gbg_ev_fleet_partners.png";
 import gbgBatteryReplacementImg from "./assets/gbg_battery_replacement.jpg";
 import gbgMultiBrandFleetImg from "./assets/gbg_multibrand_fleet.jpg";
+import bgaussLogoImg from "./assets/brands/bgauss.png";
+import motovoltLogoImg from "./assets/brands/motovolt.png";
+import gravtonLogoImg from "./assets/brands/gravton.png";
+import goeenDarkImg from "./assets/brands/goeen_dark.png";
+import zelioLogoImg from "./assets/brands/zelio.png";
 
 /**
  * Performant IntersectionObserver Hook for Scroll Reveals
@@ -118,14 +146,14 @@ function ScrollReveal({
         transitionDelay: `${delay}ms`,
         transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)"
       }}
-      className={`transition-all will-change-transform ${getVariantStyles()} ${className}`}
+      className={`transition-all ${isVisible ? "opacity-100 transform-none" : "will-change-transform " + getVariantStyles()} ${className}`}
     >
       {children}
     </div>
   );
 }
 
-class AppErrorBoundary extends Component {
+export class AppErrorBoundary extends Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -230,28 +258,76 @@ export const GoBabyGoLogo = ({ className = "h-12 w-auto", variant = "default", s
 export const ExactGbgEvLogo = ({ className = "h-28 sm:h-36 md:h-40 w-auto" }) => {
   return (
     <img
-      src={gbgEvLogoImg}
+      src={gbgEvLogoCleanImg}
       alt="GBG EV Official Logo"
       className={`${className} object-contain`}
       onError={(e) => {
         e.currentTarget.onerror = null;
-        e.currentTarget.src = "/images.jpg";
+        e.currentTarget.src = gbgEvLogoImg;
       }}
     />
   );
 };
 
-export const ExactGbgxLogo = ({ className = "h-14 sm:h-18 md:h-20 w-auto" }) => {
+export const ExactGbgxLogo = ({ className = "h-14 sm:h-18 md:h-20 w-auto", isLight = false }) => {
   return (
     <img
-      src={gbgxLogoImg}
+      src={isLight ? gbgxLogoBlueImg : gbgxLogoWhiteImg}
       alt="GBGX Official Logo"
-      className={`${className} object-contain mix-blend-screen filter contrast-150 brightness-110`}
+      className={`${className} object-contain`}
       onError={(e) => {
         e.currentTarget.onerror = null;
-        e.currentTarget.src = "/Screenshot 2026-08-31 150402.png";
+        e.currentTarget.src = gbgxLogoImg;
       }}
     />
+  );
+};
+
+export const GbgEvEmblem = ({ className = "w-6 h-6", title = "GBG EV" }) => (
+  <img
+    src={gbgEvEmblemImg}
+    alt={title}
+    className={`${className} object-contain rounded-full select-none`}
+    draggable="false"
+  />
+);
+
+export const GbgEvNavIcon = ({ isActive = false, className = "" }) => {
+  return (
+    <div className={`flex items-center justify-center ${isActive ? "w-[32px] h-[32px]" : "w-[22px] h-[22px]"}`}>
+      <img
+        src={gbgEvEmblemImg}
+        alt="GBG EV Official Emblem"
+        className={`object-contain transition-all duration-200 rounded-full ${
+          isActive
+            ? "w-[30px] h-[30px] drop-shadow-[0_1px_6px_rgba(239,108,30,0.5)] scale-105"
+            : "w-[20px] h-[20px] opacity-85 group-hover:opacity-100 group-hover:scale-110 drop-shadow-sm"
+        } ${className}`}
+      />
+    </div>
+  );
+};
+
+export const GbgxNavIcon = ({ isActive = false, isLight = false, className = "" }) => {
+  const logoSrc = isActive ? gbgxLogoBlueImg : (isLight ? gbgxLogoBlueImg : gbgxLogoWhiteImg);
+  return (
+    <div className={`flex items-center justify-center ${isActive ? "w-[44px] h-[32px]" : "w-[34px] h-[22px]"}`}>
+      <img
+        src={logoSrc}
+        alt="GBGX Official Logo"
+        className={`object-contain transition-all duration-200 ${
+          isActive
+            ? "w-[42px] h-auto [filter:hue-rotate(58deg)_saturate(2)_brightness(1.2)] scale-105"
+            : isLight
+            ? "w-[28px] h-auto opacity-75 group-hover:opacity-100 group-hover:scale-105"
+            : "w-[30px] h-auto opacity-80 group-hover:opacity-100 group-hover:scale-105"
+        } ${className}`}
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = gbgxLogoImg;
+        }}
+      />
+    </div>
   );
 };
 
@@ -313,6 +389,7 @@ const HERO_EV_SLIDES = [
     ctaTarget: "#subsidiaries",
     nodeLabel: "Multi-Brand Lineup",
     nodeCity: "Motovolt • BG • Zelio",
+    bookingModel: "GBG EV Multi-Brand",
     bgImage: heroLineupImg,
     thumb: heroLineupImg,
     bgPosition: "object-[center_55%]",
@@ -329,6 +406,7 @@ const HERO_EV_SLIDES = [
     ctaTarget: "#subsidiaries",
     nodeLabel: "Urban Lifestyle Rides",
     nodeCity: "College & Daily Commute",
+    bookingModel: "BG EV Electric",
     bgImage: heroEffortlessCommutesImg,
     thumb: heroEffortlessCommutesImg,
     bgPosition: "object-[center_35%]",
@@ -345,6 +423,7 @@ const HERO_EV_SLIDES = [
     ctaTarget: "#faq",
     nodeLabel: "Rapid Battery Swap",
     nodeCity: "75+ Swapping Hubs • Smart BMS",
+    bookingModel: "GBG EV Multi-Brand",
     bgImage: heroBatteriesImg,
     thumb: heroBatteriesImg,
     bgPosition: "object-center",
@@ -361,6 +440,7 @@ const HERO_EV_SLIDES = [
     ctaTarget: "#subsidiaries",
     nodeLabel: "Custom Retro Edition",
     nodeCity: "Bespoke Italian Craftsmanship",
+    bookingModel: "Custom Retro Vespa Edition",
     bgImage: heroOliveVespaImg,
     thumb: heroOliveVespaImg,
     bgPosition: "object-center",
@@ -377,6 +457,7 @@ const HERO_EV_SLIDES = [
     ctaTarget: "#contact",
     nodeLabel: "Commercial Delivery Fleet",
     nodeCity: "Swiggy, Zomato, Zepto Hubs",
+    bookingModel: "Motovolt Urbano",
     bgImage: heroDeliveryNightImg,
     thumb: heroDeliveryNightImg,
     bgPosition: "object-[center_55%]",
@@ -462,6 +543,57 @@ const SWISS_ARCHITECTURAL_TIMELINE = [
       "Accelerating urban India toward universal zero-emission transport"
     ]
   }
+];
+
+const TEAM_PILLARS = [
+  {
+    number: "01",
+    title: "CREATIVE VISION",
+    description: "We turn bold ideas into stunning visual experiences that captivate audiences."
+  },
+  {
+    number: "02",
+    title: "INNOVATION FIRST",
+    description: "Pushing boundaries with cutting-edge design & technology every single day."
+  },
+  {
+    number: "03",
+    title: "TEAM SYNERGY",
+    description: "Collaborative minds building extraordinary results together as one unit."
+  }
+];
+
+const TEAM_MEMBERS = [
+  {
+    name: "Akash Ali",
+    role: "CEO & Founder",
+    department: "Executive Leadership",
+    badge: "Founder & Visionary",
+    image: "/team/akash_headshot.png",
+    bio: "Visionary leader driving innovation and growth across all departments with 15+ years of experience.",
+    tags: ["EV Fleet Scaling", "Strategic Growth", "Clean Mobility"],
+    theme: "orange",
+  },
+  {
+    name: "Vijaya Shrivastava",
+    role: "Chief of Staff",
+    department: "Executive Operations",
+    badge: "Strategy & Governance",
+    image: "/team/vijaya_headshot.png",
+    bio: "Crafting visually stunning experiences with creative excellence and brand storytelling mastery.",
+    tags: ["Corporate Strategy", "Operations", "Governance"],
+    theme: "navy",
+  },
+  {
+    name: "Suryansh Raj Pandey",
+    role: "Head of Marketing",
+    department: "Brand & Growth",
+    badge: "Marketing & Outreach",
+    image: "/team/suryansh_headshot.png",
+    bio: "Designing intuitive and beautiful user-centered interfaces that delight millions of users.",
+    tags: ["Brand Strategy", "Market Expansion", "Digital Growth"],
+    theme: "orange",
+  },
 ];
 
 const FAQS = [
@@ -563,7 +695,7 @@ function SwissArchitecturalTimeline({ isLight }) {
                       {item.leftTitle}
                     </h4>
                     {item.leftSub && (
-                      <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
+                      <p className={`text-[11px] sm:text-xs font-medium ${isLight ? "text-slate-500" : "text-slate-400"}`}>
                         {item.leftSub}
                       </p>
                     )}
@@ -625,224 +757,333 @@ function SwissArchitecturalTimeline({ isLight }) {
   );
 }
 
-/**
- * GBGX OUR JOURNEY - COMPANY TIMELINE
- * clean typography, responsive mobile flow, and light/dark theme support.
- */
-const GBGX_JOURNEY_MILESTONES = [
-  {
-    year: "2023",
-    eyebrow: "The Beginning",
-    title: "One-Stop EV Platform",
-    desc: "GBGX launched with a vision to create a comprehensive platform for electric scooters. Started with focus on convenience, reliability, and variety.",
-    isTop: false, // Text below year (stem going down)
-    accent: "orange",
-  },
-  {
-    year: "2023",
-    eyebrow: "Building Ecosystem",
-    title: "Complete EV Solutions",
-    desc: "Expanded beyond scooters to include genuine spare parts, batteries, tires, brakes, and essential rider accessories.",
-    isTop: true, // Text above year (stem going down to year)
-    accent: "blue",
-  },
-  {
-    year: "2024",
-    eyebrow: "Nationwide Reach",
-    title: "Pan India Presence",
-    desc: "Serving riders across India with verified quality products. Platform enables easy comparison and seamless buying experience.",
-    isTop: false, // Text below year (stem going down)
-    accent: "orange",
-  },
-  {
-    year: "2024",
-    eyebrow: "Rider Community",
-    title: "Trust & Convenience",
-    desc: "Built a thriving community of EV riders. Offering high-quality verified products and dedicated support for sustainable mobility.",
-    isTop: true, // Text above year (stem going down to year)
-    accent: "blue",
-  },
-  {
-    year: "2025",
-    eyebrow: "Future Ready",
-    title: "Innovation Focused",
-    desc: "Continuously expanding offerings with future-ready solutions. AI-powered recommendations and limitless possibilities ahead.",
-    isTop: false, // Text below year (stem going down)
-    accent: "orange",
-  },
-];
 
-function GbgxJourneyTimeline() {
+// ============================================================================
+// MOBILE SCULPTED FLUID BOTTOM NAVIGATION BAR
+// Inspired by modern curved notch / floating bubble navigation
+// Featuring:
+// - Dynamic sliding crest with continuous Bezier curves
+// - Floating elevated active circular icon button with tactile pop animation
+// - Full responsiveness across OLED mobile phone screens & safe-area insets
+// - Real-time scrollspy tracking and smooth section navigation
+// ============================================================================
+function MobileCurvedNavBar({ activeSection, handleNavClick, isLight }) {
+  const items = [
+    { id: "home", label: "Home", icon: <Home size={19} />, activeIcon: <Home size={22} className="stroke-[2.4]" /> },
+    {
+      id: "gbgev-section",
+      label: "GBG EV",
+      icon: <GbgEvNavIcon isActive={false} />,
+      activeIcon: <GbgEvNavIcon isActive={true} />
+    },
+    {
+      id: "gbgx-section",
+      label: "GBG X",
+      icon: <GbgxNavIcon isActive={false} isLight={isLight} />,
+      activeIcon: <GbgxNavIcon isActive={true} isLight={isLight} />
+    },
+    { id: "team", label: "Team", icon: <Users size={19} />, activeIcon: <Users size={22} className="stroke-[2.4]" /> },
+    { id: "faq", label: "FAQ", icon: <HelpCircle size={19} />, activeIcon: <HelpCircle size={22} className="stroke-[2.4]" /> },
+    { id: "contact", label: "Contact", icon: <Phone size={19} />, activeIcon: <Phone size={22} className="stroke-[2.4]" /> }
+  ];
+
+  const matchedIndex = items.findIndex((it) => it.id === activeSection);
+  const activeIndex = matchedIndex >= 0 ? matchedIndex : 0;
+  const activeItem = items[activeIndex] || items[0];
+  const isGbgX = activeItem.id === "gbgx-section";
+
+  // Dynamic center position based on actual number of items
+  // Instant, GPU-accelerated: zero layout thrashing, zero getBoundingClientRect calls on scroll
+  const leftPosition = `${((activeIndex + 0.5) / items.length) * 100}%`;
+
   return (
-    <div className="pt-14 pb-4">
-      <ScrollReveal variant="fade-up" delay={80}>
-        <div className="rounded-3xl relative overflow-hidden bg-[#0A0E17] text-white border border-[#EF6C1E]/30 shadow-[0_0_50px_rgba(239,108,30,0.12),0_0_80px_rgba(37,99,235,0.08)] p-6 sm:p-10 lg:p-14">
-          {/* Subtle Ambient Glow Accents (Orange & Royal Blue) */}
-          <div className="absolute top-0 right-10 w-96 h-96 bg-[#EF6C1E]/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-10 w-80 h-80 bg-[#2563EB]/10 rounded-full blur-3xl pointer-events-none" />
-
-          {/* Section Header */}
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-8 mb-6 border-b border-white/10 relative z-10">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#EF6C1E]/15 border border-[#EF6C1E]/35 text-[#EF6C1E] shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
-                <span>Strategic Roadmap</span>
-              </div>
-              <h4 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white">
-                The Legacy of <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EF6C1E] via-orange-400 to-[#2563EB]">GBGX</span>
-              </h4>
-
-              <p className="text-xs sm:text-sm font-medium text-slate-400">
-                From 2023 to the Future • Pioneering Multi-Brand Electric Mobility
-              </p>
-            </div>
-          </div>
-
-          {/* 
-            ========================================================================
-            DESKTOP VIEW: STAGGERED HORIZONTAL TIMELINE (INSPIRED BY REFERENCE SLIDE)
-            All 5 years aligned on the exact same horizontal axis!
-            ========================================================================
-          */}
-          <div className="hidden lg:block relative pt-4 pb-8">
-            {/* Continuous Horizontal Baseline Axis passing right behind the years */}
-            <div className="absolute top-[204px] left-2 right-10 h-[1.5px] z-0 pointer-events-none bg-gradient-to-r from-white/20 via-[#2563EB]/40 to-[#EF6C1E]" />
-
-            {/* Glowing Infinity Symbol Terminating the Timeline Axis */}
+    <>
+      <style>{`
+        @keyframes scalePop {
+          0% { transform: scale(0.7); opacity: 0; }
+          60% { transform: scale(1.12); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+      <nav
+        aria-label="Mobile Bottom Navigation"
+        className="fixed bottom-0 left-0 right-0 z-40 md:hidden pointer-events-none"
+        style={{
+          paddingBottom: "max(0.6rem, env(safe-area-inset-bottom, 0.6rem))"
+        }}
+      >
+        <div className="max-w-md mx-auto px-3 pointer-events-auto">
+          <div
+            className={`relative rounded-[28px] border transition-all duration-300 backdrop-blur-2xl backdrop-saturate-180 ${
+              isLight
+                ? "bg-white/75 border-white/80 shadow-[0_12px_40px_rgba(0,0,0,0.10)] text-slate-700"
+                : "bg-[#0B0F19]/75 border-white/15 shadow-[0_12px_45px_rgba(0,0,0,0.6)] text-slate-300"
+            }`}
+            style={{
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              backdropFilter: "blur(24px) saturate(180%)"
+            }}
+          >
+            {/* Sliding Curved Crest & Floating Elevated Circular Active Button */}
             <div
-              className="absolute top-[204px] -right-1 -translate-y-1/2 z-20 flex items-center justify-center bg-[#0A0E17] pl-2.5 py-0.5"
-              title="Beyond 2025 • Limitless Future"
+              className="absolute -top-[30px] pointer-events-none z-20 flex flex-col items-center"
+              style={{
+                left: leftPosition,
+                transform: "translateX(-50%) translateZ(0)",
+                transition: "left 260ms cubic-bezier(0.25, 1, 0.5, 1)",
+                willChange: "left"
+              }}
             >
-              <span className="text-3xl sm:text-4xl xl:text-5xl font-black text-[#EF6C1E] drop-shadow-[0_0_20px_rgba(239,108,30,0.85)] select-none hover:scale-110 transition-transform duration-300 cursor-default">
-                ∞
-              </span>
+              {/* Sculpted Crest SVG: solid dome completely wraps behind the circular button */}
+              <div className="relative">
+                <svg
+                  width="84"
+                  height="34"
+                  viewBox="0 0 84 34"
+                  className="drop-shadow-[0_-3px_8px_rgba(0,0,0,0.05)] dark:drop-shadow-[0_-4px_10px_rgba(0,0,0,0.5)]"
+                >
+                  {/* Glassy Body Fill: blends seamlessly with the navbar card */}
+                  <path
+                    d="M 0 32 C 18 32, 23 2, 42 2 C 61 2, 66 32, 84 32 L 84 46 L 0 46 Z"
+                    className={isLight ? "fill-white/80" : "fill-[#0B0F19]/80"}
+                  />
+                  {/* Continuous Top Outline */}
+                  <path
+                    d="M 0 32 C 18 32, 23 2, 42 2 C 61 2, 66 32, 84 32"
+                    fill="none"
+                    className={isLight ? "stroke-slate-200/80" : "stroke-white/15"}
+                    strokeWidth="1.2"
+                  />
+                </svg>
+              </div>
+
+              {/* Elevated Floating Circular Active Button */}
+              <div
+                className={`absolute top-[5px] w-[48px] h-[48px] rounded-full flex items-center justify-center border-[2.5px] backdrop-blur-xl transition-all duration-200 ${
+                  isGbgX
+                    ? isLight
+                      ? "border-[#A855F7] bg-purple-50/95 text-[#A855F7] shadow-[0_4px_12px_rgba(168,85,247,0.25)]"
+                      : "border-[#B026FF] bg-[#160B24]/95 text-[#C084FC] shadow-[0_4px_14px_rgba(176,38,255,0.35)]"
+                    : isLight
+                    ? "border-[#EF6C1E] bg-orange-50/90 text-[#EF6C1E] shadow-[0_6px_18px_rgba(239,108,30,0.35)]"
+                    : "border-[#EF6C1E] bg-[#16100B]/90 text-[#EF6C1E] shadow-[0_6px_20px_rgba(239,108,30,0.45)]"
+                }`}
+                style={{
+                  WebkitBackdropFilter: "blur(16px)",
+                  backdropFilter: "blur(16px)"
+                }}
+              >
+                <div key={activeSection} className="animate-[scalePop_0.26s_cubic-bezier(0.34,1.56,0.64,1)]">
+                  {activeItem.activeIcon}
+                </div>
+
+                {activeItem.badge && (
+                  <span
+                    className={`absolute -top-1 -right-1 text-[7px] font-mono font-black uppercase px-1.5 py-[0.5px] rounded-full shadow-sm leading-none ${
+                      isGbgX ? "bg-[#A855F7] text-white" : "bg-[#EF6C1E] text-white"
+                    }`}
+                  >
+                    {activeItem.badge}
+                  </span>
+                )}
+              </div>
             </div>
 
-            <div className="grid grid-cols-5 gap-6 xl:gap-8 relative z-10 items-stretch">
-              {GBGX_JOURNEY_MILESTONES.map((item, idx) => {
-                const isOrange = item.accent === "orange";
+            {/* Tab Navigation Items (Responsive grid matching items count) */}
+            <div
+              className="grid items-end px-1 pt-2.5 pb-1 h-[66px]"
+              style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+            >
+              {items.map((item, idx) => {
+                const isActive = activeIndex === idx;
+                const isTabGbgX = item.id === "gbgx-section";
+
                 return (
-                  <div key={idx} className="flex flex-col justify-between group">
-                    {/* Row 1: Top Content Slot */}
-                    <div className="h-[140px] flex flex-col justify-end">
-                      {item.isTop ? (
-                        <div className="space-y-1.5 text-left pb-1">
-                          <p className={`text-[11px] font-bold uppercase tracking-wider ${isOrange ? "text-[#EF6C1E]" : "text-blue-400"}`}>
-                            {item.eyebrow}
-                          </p>
-                          <h5 className="text-sm sm:text-[15px] font-bold leading-snug text-white">
-                            {item.title}
-                          </h5>
-                          <p className="text-xs leading-relaxed font-normal text-slate-300">
-                            {item.desc}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="h-[140px]" />
-                      )}
-                    </div>
-
-                    {/* Row 2: Top Stem Slot (Points down from top content to year) */}
-                    <div className="h-9 flex items-end">
-                      {item.isTop ? (
-                        <div className={`w-[1.5px] h-8 ml-1 ${isOrange ? "bg-[#EF6C1E]" : "bg-[#2563EB]"}`} />
-                      ) : (
-                        <div className="h-9" />
-                      )}
-                    </div>
-
-                    {/* Row 3: Year on the Continuous Center Axis */}
-                    <div className="h-14 flex items-center relative">
-                      <div className="relative z-10 inline-block pr-4 bg-[#0A0E17]">
-                        <span className={`text-3xl sm:text-4xl xl:text-5xl font-black tracking-tight transition-transform duration-300 group-hover:scale-105 inline-block text-white ${isOrange ? "group-hover:text-[#EF6C1E]" : "group-hover:text-blue-400"}`}>
-                          {item.year}
+                  <a
+                    key={item.id}
+                    href={`#${item.id}`}
+                    onClick={(e) => handleNavClick(e, item.id)}
+                    aria-label={item.label}
+                    className="relative flex flex-col items-center justify-end h-full py-1 px-0.5 select-none cursor-pointer group active:scale-95 transition-transform"
+                  >
+                    {/* Inactive Icon with Badge */}
+                    <div
+                      className={`flex flex-col items-center justify-center transition-all duration-150 ${
+                        isActive
+                          ? "opacity-0 scale-75 -translate-y-2 pointer-events-none"
+                          : "opacity-100 scale-100 translate-y-0 group-hover:scale-105"
+                      }`}
+                    >
+                      <div className="relative p-1">
+                        <span
+                          className={`transition-colors duration-150 ${
+                            isLight
+                              ? "text-slate-500 group-hover:text-slate-800"
+                              : "text-slate-400 group-hover:text-slate-100"
+                          }`}
+                        >
+                          {item.icon}
                         </span>
+                        {item.badge && (
+                          <span
+                            className={`absolute -top-1 -right-2 text-[7px] font-mono font-black uppercase px-1 py-[0.5px] rounded leading-none ${
+                              isTabGbgX
+                                ? "bg-purple-500/20 text-[#A855F7] border border-purple-500/30"
+                                : "bg-[#EF6C1E]/20 text-[#EF6C1E] border border-[#EF6C1E]/30"
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    {/* Row 4: Bottom Stem Slot (Points down from year to bottom content) */}
-                    <div className="h-9 flex items-start">
-                      {!item.isTop ? (
-                        <div className={`w-[1.5px] h-8 ml-1 ${isOrange ? "bg-[#EF6C1E]" : "bg-[#2563EB]"}`} />
-                      ) : (
-                        <div className="h-9" />
-                      )}
-                    </div>
-
-                    {/* Row 5: Bottom Content Slot */}
-                    <div className="h-[140px] flex flex-col justify-start">
-                      {!item.isTop ? (
-                        <div className="space-y-1.5 text-left pt-1">
-                          <p className={`text-[11px] font-bold uppercase tracking-wider ${isOrange ? "text-[#EF6C1E]" : "text-blue-400"}`}>
-                            {item.eyebrow}
-                          </p>
-                          <h5 className="text-sm sm:text-[15px] font-bold leading-snug text-white">
-                            {item.title}
-                          </h5>
-                          <p className="text-xs leading-relaxed font-normal text-slate-300">
-                            {item.desc}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="h-[140px]" />
-                      )}
-                    </div>
-                  </div>
+                    {/* Tab Label */}
+                    <span
+                      className={`text-[10px] sm:text-[10.5px] tracking-tight transition-all duration-150 leading-none mt-1 ${
+                        isActive
+                          ? isTabGbgX
+                            ? "text-[#A855F7] dark:text-[#C084FC] font-extrabold scale-105"
+                            : "text-[#EF6C1E] font-extrabold scale-105"
+                          : isLight
+                          ? "text-slate-500 font-medium group-hover:text-slate-700"
+                          : "text-slate-400 font-medium group-hover:text-slate-200"
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                  </a>
                 );
               })}
             </div>
-          </div>
 
-          {/* 
-            ========================================================================
-            MOBILE / TABLET VIEW: ELEGANT VERTICAL CONNECTED TIMELINE
-            ========================================================================
-          */}
-          <div className="lg:hidden space-y-10 relative pl-8 border-l-2 ml-3 my-4 border-white/15">
-            {GBGX_JOURNEY_MILESTONES.map((item, idx) => {
-              const isOrange = item.accent === "orange";
-              return (
-                <div key={idx} className="relative group">
-                  {/* Node Dot on the Vertical Line */}
-                  <span className={`absolute -left-[39px] top-1.5 w-4 h-4 rounded-full border-2 border-[#0A0E17] ring-4 ${isOrange ? "bg-[#EF6C1E] ring-[#EF6C1E]/25" : "bg-[#2563EB] ring-[#2563EB]/25"}`} />
-
-                  <div className="space-y-2">
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-3xl sm:text-4xl font-black tracking-tight text-white">
-                        {item.year}
-                      </span>
-                      <span className={`text-xs font-bold uppercase tracking-wider ${isOrange ? "text-[#EF6C1E]" : "text-blue-400"}`}>
-                        {item.eyebrow}
-                      </span>
-                    </div>
-
-                    <h5 className="text-base font-bold leading-snug text-white">
-                      {item.title}
-                    </h5>
-
-                    <p className="text-xs sm:text-sm leading-relaxed text-slate-300">
-                      {item.desc}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Mobile Terminating Infinity Node */}
-            <div className="relative pt-2">
-              <span className="absolute -left-[43px] -top-0.5 w-6 h-6 rounded-full border-2 bg-[#0A0E17] border-[#EF6C1E] flex items-center justify-center text-xs font-black text-[#EF6C1E] shadow-[0_0_15px_rgba(239,108,30,0.6)]">
-                ∞
-              </span>
-              <span className="text-xs font-bold uppercase tracking-widest text-orange-400/90">
-                Beyond • Limitless Future
-              </span>
-            </div>
+            {/* iOS-Style Home Indicator Bar */}
+            <div className="w-28 h-1 rounded-full bg-slate-300 dark:bg-slate-700/80 mx-auto mt-0.5 mb-1.5 opacity-75" />
           </div>
         </div>
-      </ScrollReveal>
+      </nav>
+    </>
+  );
+}
+
+/**
+ * BRAND SOCIAL SWITCHER WITH SMOOTH SLIDING PILL EFFECT
+ * Features GPU-accelerated spring slide & morph between GBG EV and GBGX
+ */
+function BrandSocialSwitcher({ socialTab, setSocialTab, isLight }) {
+  const containerRef = useRef(null);
+  const evBtnRef = useRef(null);
+  const gbgxBtnRef = useRef(null);
+  const [sliderStyle, setSliderStyle] = useState({ left: 4, width: 48, ready: false });
+
+  const updateSlider = useCallback(() => {
+    const activeBtn = socialTab === "gbgev" ? evBtnRef.current : gbgxBtnRef.current;
+    if (activeBtn && containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const btnRect = activeBtn.getBoundingClientRect();
+      const left = btnRect.left - containerRect.left;
+      const width = btnRect.width;
+      if (width > 0) {
+        setSliderStyle({
+          left,
+          width,
+          ready: true
+        });
+      }
+    }
+  }, [socialTab]);
+
+  useIsomorphicLayoutEffect(() => {
+    updateSlider();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateSlider) : null;
+    if (ro && containerRef.current) {
+      ro.observe(containerRef.current);
+    }
+    window.addEventListener("resize", updateSlider);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", updateSlider);
+    };
+  }, [updateSlider]);
+
+  const isEv = socialTab === "gbgev";
+
+  return (
+    <div
+      ref={containerRef}
+      role="tablist"
+      aria-label="Brand switcher for social media"
+      className={`relative inline-flex items-center p-1 rounded-full text-xs font-semibold border backdrop-blur-md transition-colors duration-300 select-none ${
+        isLight
+          ? "bg-slate-200/80 border-slate-300/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+          : "bg-white/[0.08] border-white/15 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]"
+      }`}
+    >
+      {/* Sliding Active Pill Background (Electric Blue Pill for GBGX) */}
+      <div
+        aria-hidden="true"
+        className="absolute top-1 bottom-1 rounded-full pointer-events-none bg-[#2563EB] shadow-[0_4px_14px_rgba(37,99,235,0.4)]"
+        style={{
+          left: `${sliderStyle.left}px`,
+          width: `${sliderStyle.width}px`,
+          opacity: sliderStyle.ready && !isEv ? 1 : 0,
+          transform: sliderStyle.ready && !isEv ? "scale(1)" : "scale(0.92)",
+          transition: sliderStyle.ready
+            ? "left 320ms cubic-bezier(0.25, 1, 0.5, 1), width 320ms cubic-bezier(0.25, 1, 0.5, 1), opacity 260ms ease, transform 260ms ease"
+            : "none",
+          willChange: "left, width, opacity, transform"
+        }}
+      />
+
+      {/* GBG EV Tab Button (Emblem only, brightens without orange pill background) */}
+      <button
+        ref={evBtnRef}
+        type="button"
+        role="tab"
+        aria-selected={isEv}
+        onClick={() => setSocialTab("gbgev")}
+        aria-label="GBG EV Social Channels"
+        title="GBG EV"
+        className="relative z-10 px-3 sm:px-4 py-1 rounded-full cursor-pointer flex items-center justify-center h-8 sm:h-9 select-none"
+      >
+        <img
+          src={gbgEvEmblemImg}
+          alt="GBG EV"
+          onLoad={updateSlider}
+          className={`w-6 h-6 sm:w-6.5 sm:h-6.5 object-contain rounded-full shrink-0 transition-all duration-300 ${
+            isEv
+              ? "opacity-100 scale-105 drop-shadow-[0_1px_4px_rgba(239,108,30,0.45)]"
+              : "opacity-40 scale-95 hover:opacity-75"
+          }`}
+        />
+      </button>
+
+      {/* GBGX Tab Button */}
+      <button
+        ref={gbgxBtnRef}
+        type="button"
+        role="tab"
+        aria-selected={!isEv}
+        onClick={() => setSocialTab("gbgx")}
+        aria-label="GBG X Social Channels"
+        title="GBG X"
+        className="relative z-10 px-3.5 sm:px-4.5 py-1 rounded-full cursor-pointer flex items-center justify-center h-8 sm:h-9 select-none"
+      >
+        <img
+          src={!isEv ? gbgxLogoWhiteImg : isLight ? gbgxLogoBlueImg : gbgxLogoWhiteImg}
+          alt="GBGX Official Logo"
+          onLoad={updateSlider}
+          className={`h-3 sm:h-3.5 w-auto object-contain shrink-0 transition-all duration-300 ${
+            !isEv
+              ? "opacity-100 scale-100"
+              : "opacity-40 scale-95 hover:opacity-75"
+          }`}
+        />
+      </button>
     </div>
   );
 }
+
 
 function MainApp({ onReplayIntro }) {
   const [theme, setTheme] = useState(() => {
@@ -861,15 +1102,224 @@ function MainApp({ onReplayIntro }) {
   const [newsletterSuccess, setNewsletterSuccess] = useState(false);
   const [socialTab, setSocialTab] = useState("gbgev");
 
+  // Backend Modal States
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [bookingModalService, setBookingModalService] = useState("scooter_subscription");
+  const [bookingModalModel, setBookingModalModel] = useState("GBG EV Multi-Brand");
+  const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
+  const [inquiryModalType, setInquiryModalType] = useState("corporate_fleet");
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+
+  // Active Navigation Section for Mobile Bottom Dock & Desktop Header
+  const [activeSection, setActiveSection] = useState("home");
+  const activeSectionRef = useRef("home");
+  const isNavClickRef = useRef(false);
+  const navClickTimerRef = useRef(null);
+
+  // Smart Top Nav Visibility: Hide on Scroll Down, Reappear on Scroll Up
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
+
+  // Lock background scroll when mobile menu is open to ensure zero jank and 60fps transitions
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (window.location.hash) {
+      const hashId = window.location.hash.replace("#", "");
+      if (["home", "gbgev-section", "gbgx-section", "team", "faq", "contact"].includes(hashId)) {
+        activeSectionRef.current = hashId;
+        setActiveSection(hashId);
+      }
+    }
+
+    const sectionIds = ["home", "gbgev-section", "gbgx-section", "team", "faq", "contact"];
+
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          ticking = false;
+
+          const currentScrollY = window.scrollY;
+          const prevScrollY = lastScrollYRef.current;
+          const scrollDiff = currentScrollY - prevScrollY;
+
+          // 1. Smart Top Nav Auto-Hide on Scroll Down / Reappear on Scroll Up
+          if (currentScrollY <= 80) {
+            setIsNavVisible(true);
+          } else if (Math.abs(scrollDiff) > 8) {
+            if (scrollDiff > 0) {
+              // Scrolling down -> hide top nav
+              setIsNavVisible(false);
+            } else {
+              // Scrolling up -> reveal top nav
+              setIsNavVisible(true);
+            }
+          }
+          lastScrollYRef.current = currentScrollY;
+
+          // 2. Active Section Scrollspy (suppressed during programmatic clicks)
+          if (isNavClickRef.current) return;
+
+          // If at the very top of the page, stick to "home"
+          if (currentScrollY < 120) {
+            if (activeSectionRef.current !== "home") {
+              activeSectionRef.current = "home";
+              setActiveSection("home");
+            }
+            return;
+          }
+
+          // Trigger line is ~240px from top of viewport
+          const triggerY = 240;
+          let matched = "home";
+
+          for (let i = sectionIds.length - 1; i >= 0; i--) {
+            const el = document.getElementById(sectionIds[i]);
+            if (el) {
+              const rect = el.getBoundingClientRect();
+              if (rect.top <= triggerY) {
+                matched = sectionIds[i];
+                break;
+              }
+            }
+          }
+
+          if (matched && activeSectionRef.current !== matched) {
+            activeSectionRef.current = matched;
+            setActiveSection(matched);
+          }
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      clearTimeout(navClickTimerRef.current);
+    };
+  }, []);
+
+  const handleNavClick = (e, sectionId) => {
+    e.preventDefault();
+
+    // Lock scrollspy updates while smoothly scrolling
+    isNavClickRef.current = true;
+    clearTimeout(navClickTimerRef.current);
+    navClickTimerRef.current = setTimeout(() => {
+      isNavClickRef.current = false;
+    }, 850);
+
+    activeSectionRef.current = sectionId;
+    setActiveSection(sectionId);
+    setMobileMenuOpen(false);
+
+    if (sectionId === "home") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const target = document.getElementById(sectionId);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+
+    if (typeof window !== "undefined" && window.history) {
+      window.history.replaceState(null, "", `#${sectionId}`);
+    }
+  };
+
+  const handleOpenBooking = (service = "scooter_subscription", model = "GBG EV Multi-Brand") => {
+    setBookingModalService(service);
+    setBookingModalModel(model);
+    setBookingModalOpen(true);
+  };
+
+  const handleOpenInquiry = (type = "corporate_fleet") => {
+    setInquiryModalType(type);
+    setInquiryModalOpen(true);
+  };
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("gbg_theme", theme);
+      const root = document.documentElement;
+      if (theme === "dark") {
+        root.classList.add("dark");
+        root.classList.remove("light");
+        root.style.colorScheme = "dark";
+        root.style.backgroundColor = "#090D14";
+        if (document.body) document.body.style.backgroundColor = "#090D14";
+      } else {
+        root.classList.add("light");
+        root.classList.remove("dark");
+        root.style.colorScheme = "light";
+        root.style.backgroundColor = "#F8FAFC";
+        if (document.body) document.body.style.backgroundColor = "#F8FAFC";
+      }
     }
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
+  const toggleTheme = useCallback((e) => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+
+    // If View Transitions API is not supported or user prefers reduced motion, update state directly
+    if (
+      typeof document === "undefined" ||
+      !document.startViewTransition ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setTheme(nextTheme);
+      return;
+    }
+
+    // Capture click position for ripple effect (or default to top-right toggle area)
+    const x = e?.clientX ?? (window.innerWidth - 80);
+    const y = e?.clientY ?? 40;
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    const transition = document.startViewTransition(() => {
+      flushSync(() => {
+        setTheme(nextTheme);
+      });
+    });
+
+    transition.ready
+      .then(() => {
+        const clipPath = [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${endRadius}px at ${x}px ${y}px)`
+        ];
+        document.documentElement.animate(
+          {
+            clipPath: clipPath
+          },
+          {
+            duration: 480,
+            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            pseudoElement: "::view-transition-new(root)"
+          }
+        );
+      })
+      .catch(() => {
+        // Graceful silent fallback
+      });
+  }, [theme]);
 
   const isLight = theme === "light";
 
@@ -884,17 +1334,275 @@ function MainApp({ onReplayIntro }) {
 
   return (
     <div
-      className={`min-h-screen font-sans selection:bg-orange-500 selection:text-white transition-colors duration-300 ${
+      className={`min-h-screen font-sans selection:bg-orange-500 selection:text-white ${
         isLight ? "bg-[#F8FAFC] text-slate-800" : "bg-[#090D14] text-slate-100"
       }`}
       style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}
     >
       {/* 
         ========================================================================
-        1. HERO SECTION & FLOATING GLASS NAVIGATION
+        GLOBAL STICKY MNC FROSTED NAVIGATION HEADER
         ========================================================================
       */}
-      <section id="home" className="relative min-h-screen flex flex-col justify-between overflow-hidden">
+      <header
+        onFocusCapture={() => setIsNavVisible(true)}
+        className={`sticky top-0 z-50 w-full border-b backdrop-blur-2xl backdrop-saturate-180 transition-transform duration-300 ease-in-out ${
+          isNavVisible || mobileMenuOpen
+            ? "translate-y-0"
+            : "-translate-y-full shadow-none pointer-events-none"
+        } ${
+          isLight
+            ? "bg-white/65 border-slate-200/60 text-slate-900 shadow-[0_4px_30px_rgba(0,0,0,0.03)]"
+            : "bg-[#070A11]/65 border-white/[0.08] text-white shadow-[0_4px_30px_rgba(0,0,0,0.4)]"
+        }`}
+        style={{
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          willChange: "transform"
+        }}
+      >
+        <div className="max-w-[1600px] mx-auto px-6 sm:px-10 lg:px-16 h-18 sm:h-20 flex items-center justify-between">
+          <a
+            href="#home"
+            className="flex items-center gap-3.5 bg-transparent transition-all duration-300 focus:outline-none group cursor-pointer"
+            aria-label="Go Baby Go Cabs"
+          >
+            <GoBabyGoLogo className="h-10 sm:h-12 w-auto shrink-0" variant={isLight ? "dark" : "light"} />
+            <div className="hidden sm:flex flex-col text-left">
+              <span className={`text-base font-extrabold tracking-tight leading-none ${isLight ? "text-slate-900" : "text-white"}`}>
+                GoBabyGo <span className="text-[#EF6C1E]">Cabs</span>
+              </span>
+              <span className={`text-[10px] uppercase font-mono tracking-widest mt-1 ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+                Enterprise Mobility Platform
+              </span>
+            </div>
+          </a>
+
+          <nav className={`hidden md:flex items-center gap-7 md:gap-8 lg:gap-10 xl:gap-12 text-[13px] lg:text-[14px] tracking-[0.14em] uppercase font-semibold ${
+            isLight ? "text-slate-700" : "text-white/85"
+          }`}>
+            <a
+              href="#home"
+              onClick={(e) => handleNavClick(e, "home")}
+              className={`py-2 px-1 transition-all duration-200 hover:-translate-y-0.5 hover:text-orange-500 ${
+                activeSection === "home" ? "text-orange-500 font-bold" : ""
+              }`}
+            >
+              Home
+            </a>
+            <a
+              href="#gbgev-section"
+              onClick={(e) => handleNavClick(e, "gbgev-section")}
+              className={`py-2 px-1 transition-all duration-200 hover:-translate-y-0.5 hover:text-orange-500 ${
+                activeSection === "gbgev-section" ? "text-orange-500 font-bold" : ""
+              }`}
+            >
+              GBG EV
+            </a>
+            <a
+              href="#gbgx-section"
+              onClick={(e) => handleNavClick(e, "gbgx-section")}
+              className={`py-2 px-1 transition-all duration-200 hover:-translate-y-0.5 hover:text-[#A855F7] ${
+                activeSection === "gbgx-section" ? "text-[#A855F7] font-bold" : ""
+              }`}
+            >
+              GBG X
+            </a>
+            <a
+              href="#team"
+              onClick={(e) => handleNavClick(e, "team")}
+              className={`py-2 px-1 transition-all duration-200 hover:-translate-y-0.5 hover:text-orange-500 ${
+                activeSection === "team" ? "text-orange-500 font-bold" : ""
+              }`}
+            >
+              Team
+            </a>
+            <a
+              href="#faq"
+              onClick={(e) => handleNavClick(e, "faq")}
+              className={`py-2 px-1 transition-all duration-200 hover:-translate-y-0.5 hover:text-orange-500 ${
+                activeSection === "faq" ? "text-orange-500 font-bold" : ""
+              }`}
+            >
+              FAQ
+            </a>
+            <a
+              href="#contact"
+              onClick={(e) => handleNavClick(e, "contact")}
+              className={`py-2 px-1 transition-all duration-200 hover:-translate-y-0.5 hover:text-orange-500 ${
+                activeSection === "contact" ? "text-orange-500 font-bold" : ""
+              }`}
+            >
+              Contact
+            </a>
+          </nav>
+
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <button
+              onClick={toggleTheme}
+              className={`p-2.5 rounded-full active:scale-90 hover:scale-105 transition-all border flex items-center justify-center shadow-sm cursor-pointer group backdrop-blur-md ${
+                isLight
+                  ? "bg-white/60 hover:bg-white/90 text-slate-700 border-slate-200/80 shadow-slate-200/40"
+                  : "bg-white/10 hover:bg-white/20 text-white border-white/15"
+              }`}
+              style={{ WebkitBackdropFilter: "blur(12px)", backdropFilter: "blur(12px)" }}
+              aria-label={`Switch to ${isLight ? "Dark" : "Light"} Mode`}
+              title={`Switch to ${isLight ? "Dark" : "Light"} Mode`}
+            >
+              {isLight ? (
+                <Moon size={17} strokeWidth={2} className="text-amber-500 transition-transform duration-300 group-hover:-rotate-12" />
+              ) : (
+                <Sun size={17} strokeWidth={2} className="text-amber-400 transition-transform duration-300 group-hover:rotate-45" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className={`md:hidden p-2 rounded-lg border transition-colors cursor-pointer backdrop-blur-md ${
+                isLight
+                  ? "bg-white/60 hover:bg-white/90 border-slate-200/80 text-slate-800"
+                  : "bg-white/10 hover:bg-white/20 border-white/15 text-white"
+              }`}
+              style={{ WebkitBackdropFilter: "blur(12px)", backdropFilter: "blur(12px)" }}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Nav Overlay Drawer */}
+      <div
+        id="mobile-nav-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation Menu"
+        aria-hidden={!mobileMenuOpen}
+        className={`fixed inset-0 z-50 flex flex-col p-6 sm:p-8 pt-6 md:hidden transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          mobileMenuOpen
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 -translate-y-3 pointer-events-none"
+        } ${
+          isLight ? "bg-white/95 text-slate-900 border-b border-slate-200/80" : "bg-[#070A11]/95 text-slate-100 border-b border-white/10"
+        }`}
+        style={{
+          WebkitBackdropFilter: "blur(12px)",
+          backdropFilter: "blur(12px)",
+          willChange: "transform, opacity"
+        }}
+      >
+          <div className="flex items-center justify-between pb-6 border-b border-slate-200 dark:border-white/10">
+            <div className="flex items-center gap-3">
+              <GoBabyGoLogo className="h-9 w-auto" variant={isLight ? "dark" : "light"} />
+              <div className="flex flex-col text-left">
+                <span className="text-sm font-bold leading-none">GoBabyGo Cabs</span>
+                <span className="text-[9px] uppercase font-mono tracking-wider text-[#EF6C1E] mt-0.5">Mobility MNC</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleTheme}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold cursor-pointer backdrop-blur-md ${
+                  isLight ? "bg-white/60 hover:bg-white/90 border-slate-300/80 text-slate-800" : "bg-white/10 hover:bg-white/20 text-white border-white/20"
+                }`}
+                style={{ WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)" }}
+              >
+                {isLight ? <Moon size={14} className="text-amber-500" /> : <Sun size={14} className="text-amber-400" />}
+                <span>{isLight ? "Dark" : "Light"}</span>
+              </button>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-lg text-slate-600 dark:text-white cursor-pointer"
+                aria-label="Close menu"
+              >
+                <X size={22} />
+              </button>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4 text-base font-bold tracking-wider uppercase mt-6 overflow-y-auto">
+            <a href="#home" onClick={(e) => handleNavClick(e, "home")} className="hover:text-orange-500 py-1 flex items-center justify-between">
+              <span>Home</span>
+              {activeSection === "home" && <span className="w-2 h-2 rounded-full bg-orange-500" />}
+            </a>
+            <a
+              href="#gbgev-section"
+              onClick={(e) => handleNavClick(e, "gbgev-section")}
+              aria-label="GBG EV"
+              title="GBG EV"
+              className="hover:opacity-85 py-1.5 flex items-center justify-between"
+            >
+              <img
+                src={gbgEvEmblemImg}
+                alt="GBG EV"
+                className="h-6 sm:h-7 w-auto object-contain inline-block shrink-0 rounded-full drop-shadow-sm hover:scale-105 transition-transform"
+              />
+              {activeSection === "gbgev-section" && <span className="w-2 h-2 rounded-full bg-orange-500" />}
+            </a>
+            <a
+              href="#gbgx-section"
+              onClick={(e) => handleNavClick(e, "gbgx-section")}
+              aria-label="GBG X"
+              title="GBG X"
+              className="hover:opacity-85 py-1.5 flex items-center justify-between"
+            >
+              <img
+                src={isLight ? gbgxLogoBlueImg : gbgxLogoWhiteImg}
+                alt="GBGX Official Logo"
+                className="h-2.5 sm:h-3 w-auto max-w-[64px] sm:max-w-[72px] object-contain inline-block shrink-0 drop-shadow-sm [filter:hue-rotate(58deg)] hover:scale-105 transition-transform"
+              />
+              {activeSection === "gbgx-section" && <span className="w-2 h-2 rounded-full bg-[#A855F7] shadow-[0_0_8px_rgba(168,85,247,0.8)]" />}
+            </a>
+            <a href="#team" onClick={(e) => handleNavClick(e, "team")} className="hover:text-orange-500 py-1 flex items-center justify-between">
+              <span>Our Team</span>
+              {activeSection === "team" && <span className="w-2 h-2 rounded-full bg-orange-500" />}
+            </a>
+            <a href="#faq" onClick={(e) => handleNavClick(e, "faq")} className="hover:text-orange-500 py-1 flex items-center justify-between">
+              <span>FAQ</span>
+              {activeSection === "faq" && <span className="w-2 h-2 rounded-full bg-orange-500" />}
+            </a>
+            <a href="#contact" onClick={(e) => handleNavClick(e, "contact")} className="hover:text-orange-500 py-1 flex items-center justify-between">
+              <span>Contact</span>
+              {activeSection === "contact" && <span className="w-2 h-2 rounded-full bg-orange-500" />}
+            </a>
+
+            {/* Quick Action Buttons in Drawer */}
+            <div className="pt-6 mt-4 border-t border-slate-200 dark:border-white/10 flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleOpenBooking();
+                }}
+                className="w-full py-3 rounded-xl bg-[#EF6C1E] hover:bg-orange-600 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-orange-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Book Fleet Subscription</span>
+                <ArrowRight size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleOpenInquiry();
+                }}
+                className={`w-full py-3 rounded-xl border font-bold text-xs uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer ${
+                  isLight
+                    ? "border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200"
+                    : "border-white/20 bg-white/5 text-white hover:bg-white/10"
+                }`}
+              >
+                <span>Corporate Inquiry</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      {/* 
+        ========================================================================
+        1. HERO SECTION & ARC CAROUSEL SHOWCASE
+        ========================================================================
+      */}
+      <section id="home" className="relative min-h-[calc(100vh-76px)] flex flex-col justify-between overflow-hidden">
         {HERO_EV_SLIDES.map((item, index) => (
           <div
             key={item.id}
@@ -926,107 +1634,6 @@ function MainApp({ onReplayIntro }) {
 
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* FLOATING GLASS NAVIGATION HEADER */}
-        <header className="relative z-30 w-full pt-6 px-6 sm:px-10 lg:px-16">
-          <div className="max-w-[1600px] mx-auto flex items-center justify-between">
-            <a
-              href="#home"
-              className="flex items-center bg-transparent transition-all duration-300 focus:outline-none"
-              aria-label="Go Baby Go Cabs"
-            >
-              <GoBabyGoLogo className="h-12 sm:h-14 w-auto" variant="light" />
-            </a>
-
-            <nav className="hidden md:flex items-center space-x-10 text-[13px] tracking-[0.16em] uppercase font-semibold text-white/90">
-              <a href="#home" className="hover:text-orange-400 transition-colors duration-200">
-                Home
-              </a>
-              <a href="#subsidiaries" className="hover:text-orange-400 transition-colors duration-200">
-                GBG EV
-              </a>
-              <a href="#subsidiaries" className="hover:text-orange-400 transition-colors duration-200">
-                GBG X
-              </a>
-              <a href="#about" className="hover:text-orange-400 transition-colors duration-200">
-                About Us
-              </a>
-              <a href="#faq" className="hover:text-orange-400 transition-colors duration-200">
-                FAQ
-              </a>
-              <a href="#contact" className="hover:text-orange-400 transition-colors duration-200">
-                Contact
-              </a>
-            </nav>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={toggleTheme}
-                className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 backdrop-blur-md text-white transition-all border border-white/15 flex items-center justify-center shadow-lg"
-                aria-label={`Switch to ${isLight ? "Dark" : "Light"} Mode`}
-                title={`Switch to ${isLight ? "Dark" : "Light"} Mode`}
-              >
-                {isLight ? (
-                  <Moon size={18} strokeWidth={1.75} className="text-amber-300" />
-                ) : (
-                  <Sun size={18} strokeWidth={1.75} className="text-amber-400" />
-                )}
-              </button>
-
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg bg-white/10 text-white"
-                aria-label="Toggle menu"
-              >
-                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* Mobile Nav Overlay */}
-        {mobileMenuOpen && (
-          <div className={`fixed inset-0 z-40 backdrop-blur-2xl flex flex-col p-8 pt-24 md:hidden transition-colors ${
-            isLight ? "bg-slate-900/95 text-white" : "bg-black/95 text-slate-200"
-          }`}>
-            <div className="flex items-center justify-between absolute top-6 left-6 right-6">
-              <button
-                onClick={toggleTheme}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-semibold uppercase tracking-wider text-white"
-              >
-                {isLight ? <Moon size={15} className="text-amber-300" /> : <Sun size={15} className="text-amber-400" />}
-                <span>{isLight ? "Dark Mode" : "Light Mode"}</span>
-              </button>
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2 text-white"
-                aria-label="Close menu"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <div className="flex flex-col gap-6 text-lg font-semibold tracking-wider uppercase mt-4">
-              <a href="#home" onClick={() => setMobileMenuOpen(false)} className="hover:text-orange-400">
-                Home
-              </a>
-              <a href="#subsidiaries" onClick={() => setMobileMenuOpen(false)} className="hover:text-orange-400">
-                GBG EV (B2B Fleet & Hubs)
-              </a>
-              <a href="#subsidiaries" onClick={() => setMobileMenuOpen(false)} className="hover:text-orange-400">
-                GBG X (Multi-Brand EV Platform)
-              </a>
-              <a href="#about" onClick={() => setMobileMenuOpen(false)} className="hover:text-orange-400">
-                About GoBabyGo Cabs
-              </a>
-              <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="hover:text-orange-400">
-                Frequently Asked Questions
-              </a>
-              <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="hover:text-orange-400">
-                Contact
-              </a>
-            </div>
-          </div>
-        )}
-
         {/* HERO MAIN BODY */}
         <div className="relative z-20 flex-1 max-w-[1600px] mx-auto w-full px-6 sm:px-10 lg:px-16 flex flex-col justify-center py-10 lg:py-14">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
@@ -1047,6 +1654,35 @@ function MainApp({ onReplayIntro }) {
               <p className="text-base sm:text-lg text-slate-200/90 font-normal leading-relaxed max-w-xl">
                 {slide.description}
               </p>
+
+              {/* Interactive Fullstack CTA Buttons */}
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (slide.id.includes("delivery") || slide.id.includes("commercial")) {
+                      handleOpenInquiry("corporate_fleet");
+                    } else if (slide.id.includes("battery")) {
+                      handleOpenInquiry("corporate_fleet");
+                    } else {
+                      handleOpenBooking("test_ride", slide.bookingModel || slide.nodeLabel || "GBG EV Multi-Brand");
+                    }
+                  }}
+                  className="px-6 py-3.5 rounded-full bg-gradient-to-r from-[#EF6C1E] to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-xs sm:text-sm tracking-wider uppercase transition-all shadow-xl shadow-orange-500/30 active:scale-95 flex items-center gap-2 cursor-pointer group"
+                >
+                  <span>{slide.cta || "Book Test Ride"}</span>
+                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenInquiry("corporate_fleet")}
+                  className="px-6 py-3.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs sm:text-sm tracking-wider uppercase transition-all backdrop-blur-md active:scale-95 flex items-center gap-2 cursor-pointer"
+                >
+                  <span>Fleet Partnership</span>
+                  <ArrowUpRight size={16} />
+                </button>
+              </div>
             </ScrollReveal>
 
             {/* Right Curved Arc Carousel */}
@@ -1179,49 +1815,58 @@ function MainApp({ onReplayIntro }) {
         ========================================================================
       */}
       <section id="subsidiaries" className="py-16 sm:py-20 px-6 sm:px-10 lg:px-16 max-w-[1600px] mx-auto">
-        <ScrollReveal variant="fade-up" className="text-center max-w-3xl mx-auto mb-10 sm:mb-12 space-y-3">
-          <span className={`text-xs uppercase tracking-widest font-bold px-3.5 py-1.5 rounded-full border ${
+        <ScrollReveal variant="fade-up" className="text-center max-w-3xl mx-auto mb-14 space-y-4">
+          <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border shadow-sm ${
             isLight
               ? "text-orange-600 bg-orange-100 border-orange-200"
               : "text-orange-400 bg-orange-950/40 border-orange-800/40"
           }`}>
-            Our Ecosystem
-          </span>
-          <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight capitalize ${
+            <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
+            <span>Corporate Divisions & Platforms</span>
+          </div>
+          <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight ${
             isLight ? "text-slate-900" : "text-white"
           }`}>
             Affiliated Companies
           </h2>
-          <p className={`text-xs sm:text-sm md:text-base leading-relaxed max-w-2xl mx-auto ${
+          <p className={`text-sm sm:text-base leading-relaxed max-w-2xl mx-auto ${
             isLight ? "text-slate-600" : "text-slate-300"
           }`}>
-            Discover the specialized corporate verticals and brand platforms driving clean last-mile logistics, retail mobility, and energy innovation under GoBabyGo Cabs.
+            Specialized corporate divisions and strategic brand platforms driving commercial fleet electrification, retail mobility, and battery infrastructure under GoBabyGo Cabs.
           </p>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 max-w-5xl mx-auto items-stretch">
           
+          {/* GBG EV Subsidiary Logo Tile */}
           <ScrollReveal variant="fade-right" delay={100} className="w-full">
             <a
               href="#gbgev-section"
-              className="group relative w-full h-[260px] md:h-[300px] bg-[#FFFFFF] rounded-3xl px-8 py-6 flex items-center justify-center shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 border border-slate-200 cursor-pointer overflow-hidden"
-              title="Explore GBG EV Ecosystem"
+              title="GBG EV — Commercial Fleet"
+              className={`group relative h-48 sm:h-56 md:h-64 rounded-3xl p-6 sm:p-8 flex items-center justify-center transition-all duration-300 border hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer overflow-hidden block ${
+                isLight
+                  ? "bg-white border-slate-200 shadow-xl shadow-slate-200/50 hover:border-[#EF6C1E]/60 hover:shadow-orange-500/10"
+                  : "bg-white border-[#EF6C1E]/30 shadow-2xl shadow-black/80 hover:border-[#EF6C1E]/60 hover:shadow-[0_0_35px_rgba(239,108,30,0.2)]"
+              }`}
             >
-              <div className="w-full h-full flex items-center justify-center pointer-events-none">
-                <ExactGbgEvLogo className="max-h-[140px] md:max-h-[160px] w-auto max-w-[80%] object-contain transition-transform duration-300 group-hover:scale-105" />
-              </div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#EF6C1E]/10 rounded-full blur-3xl pointer-events-none group-hover:scale-125 transition-transform" />
+              <ExactGbgEvLogo className="h-20 sm:h-24 md:h-28 w-auto max-w-[85%] max-h-[85%] object-contain transition-transform duration-300 group-hover:scale-105" />
             </a>
           </ScrollReveal>
 
+          {/* GBG X Subsidiary Logo Tile */}
           <ScrollReveal variant="fade-left" delay={150} className="w-full">
             <a
               href="#gbgx-section"
-              className="group relative w-full h-[260px] md:h-[300px] bg-[#000000] rounded-3xl px-8 py-6 flex items-center justify-center shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all duration-300 border border-neutral-800 cursor-pointer overflow-hidden"
-              title="Explore GBG X Multi-Brand Platform"
+              title="GBG X — Curated Mobility"
+              className={`group relative h-48 sm:h-56 md:h-64 rounded-3xl p-6 sm:p-8 flex items-center justify-center transition-all duration-300 border hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer overflow-hidden block ${
+                isLight
+                  ? "bg-slate-950 border-slate-800 shadow-xl shadow-slate-900/30 hover:border-[#A855F7]/60 hover:shadow-purple-500/20"
+                  : "bg-[#090D17] border-white/10 shadow-2xl shadow-black/80 hover:border-[#B026FF]/60 hover:shadow-[0_0_35px_rgba(176,38,255,0.3)]"
+              }`}
             >
-              <div className="w-full h-full flex items-center justify-center pointer-events-none">
-                <ExactGbgxLogo className="max-h-[70px] md:max-h-[85px] w-auto max-w-[70%] object-contain transition-transform duration-300 group-hover:scale-105" />
-              </div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#A855F7]/10 rounded-full blur-3xl pointer-events-none group-hover:scale-125 transition-transform" />
+              <ExactGbgxLogo className="h-10 sm:h-12 md:h-14 w-auto max-w-[85%] max-h-[85%] object-contain transition-transform duration-300 group-hover:scale-105" />
             </a>
           </ScrollReveal>
 
@@ -1259,389 +1904,392 @@ function MainApp({ onReplayIntro }) {
 
         {/* 
           ========================================================================
-          STRATEGIC ECOSYSTEM INFOGRAPHIC (CHECKERBOARD ARCHITECTURE - GBG BRAND THEME)
+          STRATEGIC ECOSYSTEM MILESTONE CARDS (INSPIRED BY PICTURE 2 DESIGN)
           ========================================================================
         */}
         <div className="mb-16 sm:mb-24">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
-            {/* 1. BLOCK 01 (Col 1, Row 1 on Desktop | Col 1, Row 1 on Mobile) - GBG ORANGE */}
-            <ScrollReveal variant="zoom-in" delay={100} className="col-start-1 row-start-1 lg:col-start-1 lg:row-start-1 h-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-7">
+            {/* 1. CARD 01 - NOIDA HQ / INCEPTION */}
+            <ScrollReveal variant="fade-up" delay={100} className="h-full">
               <div
-                className={`relative group p-4 sm:p-6 lg:p-7 rounded-xl sm:rounded-2xl border flex flex-col justify-between overflow-visible transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 min-h-[220px] sm:min-h-[260px] lg:min-h-[290px] h-full w-full ${
+                className={`relative group h-full rounded-[26px] sm:rounded-[28px] p-3.5 sm:p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${
                   isLight
-                    ? "bg-gradient-to-br from-orange-50/90 via-white to-slate-50 border-orange-200/90 shadow-md hover:border-orange-400"
-                    : "bg-gradient-to-br from-[#1c1410]/95 via-[#111624]/95 to-[#090d17]/95 border-orange-500/30 hover:border-orange-500/60 shadow-[0_15px_35px_-10px_rgba(239,108,30,0.18)]"
+                    ? "bg-white border border-slate-200/90 shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:border-slate-300"
+                    : "bg-[#0D1322] border border-white/10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.6)] hover:border-white/20"
                 }`}
               >
-                {/* Glowing Top Accent Border */}
-                <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-transparent via-[#EF6C1E] to-transparent opacity-90" />
-
-                {/* Ambient Radial Backlight */}
-                <div
-                  className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full blur-2xl opacity-25 group-hover:opacity-45 transition-all duration-500"
-                  style={{ background: "rgba(239, 108, 30, 0.25)" }}
-                />
-
-                {/* Desktop Right Arrow into Image A */}
-                <div className="hidden lg:block absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-0 h-0 border-y-[16px] border-y-transparent border-l-[16px] border-l-[#EF6C1E] drop-shadow-[0_2px_8px_rgba(239,108,30,0.35)]" />
-                {/* Desktop Down Pointer into Image C */}
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 -bottom-3 z-20 w-0 h-0 border-x-[12px] border-x-transparent border-t-[12px] border-t-[#EF6C1E] drop-shadow-[0_2px_8px_rgba(239,108,30,0.35)]" />
-                {/* Mobile Right Arrow into Image A */}
-                <div className="lg:hidden absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-0 h-0 border-y-[10px] border-y-transparent border-l-[10px] border-l-[#EF6C1E]" />
-
-                {/* Top: Icon Left, Step Number Right */}
-                <div className="flex items-start justify-between relative z-10">
-                  <div className={`p-2 sm:p-2.5 rounded-lg border transition-transform duration-300 group-hover:scale-105 ${
-                    isLight
-                      ? "bg-orange-100 border-orange-300 text-orange-600"
-                      : "bg-orange-500/15 border-orange-500/30 text-orange-400"
-                  }`}>
-                    <Calendar className="w-6 h-6 sm:w-7 sm:h-7 stroke-[1.75]" />
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none ${isLight ? "text-slate-900" : "text-white"}`}>
-                      01
-                    </span>
-                    <div className="w-8 sm:w-10 h-1 bg-[#EF6C1E] rounded-full mt-1.5 shadow-[0_0_8px_rgba(239,108,30,0.5)]" />
-                  </div>
-                </div>
-
-                {/* Middle: Description */}
-                <p className={`text-xs sm:text-[13px] lg:text-sm leading-relaxed font-medium my-auto py-2.5 sm:py-3 relative z-10 ${
-                  isLight ? "text-slate-600" : "text-slate-300"
-                }`}>
-                  Founded in Noida, UP as GoBabyGo Cabs (OPC) Private Limited, pioneering sustainable last-mile delivery and smart EV transit.
-                </p>
-
-                {/* Bottom: Hero Stat & Title */}
-                <div className={`mt-auto pt-2 border-t relative z-10 ${isLight ? "border-orange-200" : "border-white/10"}`}>
-                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none bg-gradient-to-r from-orange-400 via-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(239,108,30,0.3)]">
-                    2021
-                  </p>
-                  <p className="text-xs sm:text-sm lg:text-base font-extrabold tracking-wider uppercase mt-1 text-[#EF6C1E]">
-                    FOUNDED
-                  </p>
-                </div>
-              </div>
-            </ScrollReveal>
-
-            {/* 2. FEATURE TILE A (Col 2, Row 1 on Desktop | Col 2, Row 1 on Mobile) - NOIDA HQ */}
-            <ScrollReveal variant="zoom-in" delay={150} className="col-start-2 row-start-1 lg:col-start-2 lg:row-start-1 h-full">
-              <div className={`relative group overflow-hidden rounded-xl sm:rounded-2xl border shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 min-h-[220px] sm:min-h-[260px] lg:min-h-[290px] h-full w-full flex flex-col justify-between ${
-                isLight ? "border-orange-200 bg-white" : "border-slate-800/80 hover:border-orange-500/50 bg-[#0B0F19]"
-              }`}>
-                {/* Background HQ Photo with Smooth Zoom & Cinematic Lighting */}
-                <div className="absolute inset-0 z-0 overflow-hidden">
+                {/* Image Frame */}
+                <div className="relative overflow-hidden rounded-[20px] aspect-[16/10] w-full shrink-0 bg-slate-100 dark:bg-slate-900">
                   <img
                     src={gbgHqOfficeImg}
                     alt="GoBabyGo Cabs Corporate Headquarters - Sector 62 Noida"
                     className="w-full h-full object-cover object-[center_30%] scale-100 group-hover:scale-105 transition-transform duration-700 ease-out"
                     loading="lazy"
                   />
-                  {/* Subtle Ambient Vignette for depth and badge contrast */}
-                  <div className={`absolute inset-0 transition-opacity duration-500 ${
-                    isLight
-                      ? "bg-gradient-to-t from-black/35 via-transparent to-black/25"
-                      : "bg-gradient-to-t from-[#090d16]/70 via-transparent to-black/40"
-                  }`} />
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-transparent pointer-events-none" />
                 </div>
 
-                {/* Top Badge */}
-                <div className="relative z-10 w-full p-3 sm:p-4">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] sm:text-[10px] font-bold tracking-widest uppercase border backdrop-blur-md shadow-md whitespace-nowrap ${
-                    isLight ? "bg-white/90 text-orange-700 border-orange-200" : "bg-black/60 text-orange-400 border-orange-500/30"
+                {/* Card Content */}
+                <div className="p-1 sm:p-1.5 pt-3.5 sm:pt-4 flex flex-col flex-1">
+                  <h3 className={`text-base sm:text-lg font-bold tracking-tight line-clamp-1 ${isLight ? "text-slate-900" : "text-white"}`}>
+                    Corporate Inception
+                  </h3>
+                  <p className={`text-xs sm:text-[13px] leading-relaxed mt-1 line-clamp-2 ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+                    Founded in Noida, UP as GoBabyGo Cabs (OPC) Private Limited, pioneering sustainable last-mile delivery and smart EV transit.
+                  </p>
+
+                  {/* Specs Row with Icons */}
+                  <div className={`flex items-center justify-between text-[11px] sm:text-xs mt-3 pt-3 border-t ${
+                    isLight ? "border-slate-100 text-slate-500" : "border-white/5 text-slate-400"
                   }`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
-                    NOIDA HQ • INCEPTION
-                  </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-[#EF6C1E]" />
+                      2021 Founded
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                      Noida, UP
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                      HQ Sector 62
+                    </span>
+                  </div>
+
+                  {/* Pill Chips Row */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      OPC Pvt Ltd
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      Last-Mile EV
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      Fleet HQ
+                    </span>
+                  </div>
+
+                  {/* Bottom Stat & Pill Action Button */}
+                  <div className={`mt-auto pt-3.5 border-t flex items-center justify-between gap-3 ${
+                    isLight ? "border-slate-100" : "border-white/5"
+                  }`}>
+                    <div>
+                      <span className="text-xl sm:text-2xl font-black text-[#EF6C1E] tracking-tight leading-none block">
+                        2021
+                      </span>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mt-0.5">
+                        FOUNDED
+                      </span>
+                    </div>
+
+                    <a
+                      href="#home"
+                      className={`inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-semibold transition-all duration-200 active:scale-95 shadow-sm ${
+                        isLight
+                          ? "bg-slate-900 text-white hover:bg-slate-800"
+                          : "bg-white text-slate-900 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span>Explore</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </ScrollReveal>
 
-            {/* 3. FEATURE TILE C (Col 1, Row 2 on Desktop | Col 1, Row 2 on Mobile) - COMMERCIAL EV FLEET */}
-            <ScrollReveal variant="zoom-in" delay={250} className="col-start-1 row-start-2 lg:col-start-1 lg:row-start-2 h-full">
-              <div className={`relative group overflow-visible rounded-xl sm:rounded-2xl border shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 min-h-[220px] sm:min-h-[260px] lg:min-h-[290px] h-full w-full flex flex-col justify-between ${
-                isLight ? "border-blue-200 bg-white" : "border-slate-800/80 hover:border-blue-500/50 bg-[#0B0F19]"
-              }`}>
-                {/* Desktop Right Arrow into Card 02 */}
-                <div className="hidden lg:block absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-0 h-0 border-y-[16px] border-y-transparent border-l-[16px] border-l-[#2563EB] drop-shadow-[0_2px_8px_rgba(37,99,235,0.35)]" />
-                {/* Mobile Right Arrow into Card 02 */}
-                <div className="lg:hidden absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-0 h-0 border-y-[10px] border-y-transparent border-l-[10px] border-l-[#2563EB]" />
-
-                {/* Background EV Fleet Photo with Smooth Zoom & Cinematic Lighting */}
-                <div className="absolute inset-0 z-0 overflow-hidden rounded-xl sm:rounded-2xl">
+            {/* 2. CARD 02 - COMMERCIAL EV FLEET */}
+            <ScrollReveal variant="fade-up" delay={200} className="h-full">
+              <div
+                className={`relative group h-full rounded-[26px] sm:rounded-[28px] p-3.5 sm:p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${
+                  isLight
+                    ? "bg-white border border-slate-200/90 shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:border-slate-300"
+                    : "bg-[#0D1322] border border-white/10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.6)] hover:border-white/20"
+                }`}
+              >
+                {/* Image Frame */}
+                <div className="relative overflow-hidden rounded-[20px] aspect-[16/10] w-full shrink-0 bg-slate-100 dark:bg-slate-900">
                   <img
                     src={gbgEvFleetPartnersImg}
                     alt="GBG EV Commercial Fleet powering Zepto, Blinkit, Zomato, Swiggy"
                     className="w-full h-full object-cover object-[center_35%] scale-100 group-hover:scale-105 transition-transform duration-700 ease-out"
                     loading="lazy"
                   />
-                  {/* Subtle Ambient Vignette for depth and badge contrast */}
-                  <div className={`absolute inset-0 transition-opacity duration-500 ${
-                    isLight
-                      ? "bg-gradient-to-t from-black/35 via-transparent to-black/25"
-                      : "bg-gradient-to-t from-[#090d16]/70 via-transparent to-black/40"
-                  }`} />
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-transparent to-transparent pointer-events-none" />
                 </div>
 
-                {/* Top Badge */}
-                <div className="relative z-10 w-full p-3 sm:p-4">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] sm:text-[10px] font-bold tracking-widest uppercase border backdrop-blur-md shadow-md whitespace-nowrap ${
-                    isLight ? "bg-white/90 text-blue-700 border-blue-200" : "bg-black/60 text-blue-400 border-blue-500/30"
+                {/* Card Content */}
+                <div className="p-1 sm:p-1.5 pt-3.5 sm:pt-4 flex flex-col flex-1">
+                  <h3 className={`text-base sm:text-lg font-bold tracking-tight line-clamp-1 ${isLight ? "text-slate-900" : "text-white"}`}>
+                    Commercial EV Logistics
+                  </h3>
+                  <p className={`text-xs sm:text-[13px] leading-relaxed mt-1 line-clamp-2 ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+                    Commercial electric two-wheelers and three-wheelers powering India's leading eCommerce & logistics delivery fleets.
+                  </p>
+
+                  {/* Specs Row with Icons */}
+                  <div className={`flex items-center justify-between text-[11px] sm:text-xs mt-3 pt-3 border-t ${
+                    isLight ? "border-slate-100 text-slate-500" : "border-white/5 text-slate-400"
                   }`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-pulse" />
-                    COMMERCIAL EV FLEET
-                  </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Car className="w-3.5 h-3.5 text-[#2563EB]" />
+                      10,000+ EVs
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-slate-400" />
+                      Hyperlocal
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                      Zero Emission
+                    </span>
+                  </div>
+
+                  {/* Pill Chips Row */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      Zepto
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      Blinkit
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      Zomato
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      Swiggy
+                    </span>
+                  </div>
+
+                  {/* Bottom Stat & Pill Action Button */}
+                  <div className={`mt-auto pt-3.5 border-t flex items-center justify-between gap-3 ${
+                    isLight ? "border-slate-100" : "border-white/5"
+                  }`}>
+                    <div>
+                      <span className="text-xl sm:text-2xl font-black text-[#2563EB] tracking-tight leading-none block">
+                        10,000+
+                      </span>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mt-0.5">
+                        ACTIVE FLEET
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInquiryModalType("corporate_fleet");
+                        setInquiryModalOpen(true);
+                      }}
+                      className={`inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-semibold transition-all duration-200 active:scale-95 shadow-sm cursor-pointer ${
+                        isLight
+                          ? "bg-slate-900 text-white hover:bg-slate-800"
+                          : "bg-white text-slate-900 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span>Inquire</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </ScrollReveal>
 
-            {/* 4. BLOCK 02 (Col 2, Row 2 on Desktop | Col 2, Row 2 on Mobile) - GBG ROYAL BLUE */}
-            <ScrollReveal variant="zoom-in" delay={200} className="col-start-2 row-start-2 lg:col-start-2 lg:row-start-2 h-full">
+            {/* 3. CARD 03 - BATTERY REPLACEMENT */}
+            <ScrollReveal variant="fade-up" delay={300} className="h-full">
               <div
-                className={`relative group p-4 sm:p-6 lg:p-7 rounded-xl sm:rounded-2xl border flex flex-col justify-between overflow-visible transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 min-h-[220px] sm:min-h-[260px] lg:min-h-[290px] h-full w-full ${
+                className={`relative group h-full rounded-[26px] sm:rounded-[28px] p-3.5 sm:p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${
                   isLight
-                    ? "bg-gradient-to-br from-blue-50/90 via-white to-slate-50 border-blue-200/90 shadow-md hover:border-blue-400"
-                    : "bg-gradient-to-br from-[#10172e]/95 via-[#0e1426]/95 to-[#090d17]/95 border-blue-500/30 hover:border-blue-500/60 shadow-[0_15px_35px_-10px_rgba(37,99,235,0.18)]"
+                    ? "bg-white border border-slate-200/90 shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:border-slate-300"
+                    : "bg-[#0D1322] border border-white/10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.6)] hover:border-white/20"
                 }`}
               >
-                {/* Glowing Top Accent Border */}
-                <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-transparent via-[#2563EB] to-transparent opacity-90" />
-
-                {/* Ambient Radial Backlight */}
-                <div
-                  className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full blur-2xl opacity-25 group-hover:opacity-45 transition-all duration-500"
-                  style={{ background: "rgba(37, 99, 235, 0.25)" }}
-                />
-
-                {/* Desktop Up Pointer into Image A */}
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 -top-3 z-20 w-0 h-0 border-x-[12px] border-x-transparent border-b-[12px] border-b-[#2563EB] drop-shadow-[0_2px_8px_rgba(37,99,235,0.35)]" />
-
-                {/* Top: Icon Left, Step Number Right */}
-                <div className="flex items-start justify-between relative z-10">
-                  <div className={`p-2 sm:p-2.5 rounded-lg border transition-transform duration-300 group-hover:scale-105 ${
-                    isLight
-                      ? "bg-blue-100 border-blue-300 text-blue-600"
-                      : "bg-blue-500/15 border-blue-500/30 text-blue-400"
-                  }`}>
-                    <Car className="w-6 h-6 sm:w-7 sm:h-7 stroke-[1.75]" />
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none ${isLight ? "text-slate-900" : "text-white"}`}>
-                      02
-                    </span>
-                    <div className="w-8 sm:w-10 h-1 bg-[#2563EB] rounded-full mt-1.5 shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
-                  </div>
-                </div>
-
-                {/* Middle: Description */}
-                <p className={`text-xs sm:text-[13px] lg:text-sm leading-relaxed font-medium my-auto py-2.5 sm:py-3 relative z-10 ${
-                  isLight ? "text-slate-600" : "text-slate-300"
-                }`}>
-                  Commercial electric two-wheelers and three-wheelers powering India's leading eCommerce & logistics fleet.
-                </p>
-
-                {/* Bottom: Hero Stat & Title */}
-                <div className={`mt-auto pt-2 border-t relative z-10 ${isLight ? "border-blue-200" : "border-white/10"}`}>
-                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-200 bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(37,99,235,0.3)]">
-                    10,000+
-                  </p>
-                  <p className="text-xs sm:text-sm lg:text-base font-extrabold tracking-wider uppercase mt-1 text-[#2563EB]">
-                    ACTIVE VEHICLES
-                  </p>
-                </div>
-              </div>
-            </ScrollReveal>
-
-            {/* 5. BLOCK 03 (Col 3, Row 1 on Desktop | Col 1, Row 3 on Mobile) - GBG ORANGE */}
-            <ScrollReveal variant="zoom-in" delay={300} className="col-start-1 row-start-3 lg:col-start-3 lg:row-start-1 h-full">
-              <div
-                className={`relative group p-4 sm:p-6 lg:p-7 rounded-xl sm:rounded-2xl border flex flex-col justify-between overflow-visible transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 min-h-[220px] sm:min-h-[260px] lg:min-h-[290px] h-full w-full ${
-                  isLight
-                    ? "bg-gradient-to-br from-orange-50/90 via-white to-slate-50 border-orange-200/90 shadow-md hover:border-orange-400"
-                    : "bg-gradient-to-br from-[#1c1410]/95 via-[#111624]/95 to-[#090d17]/95 border-orange-500/30 hover:border-orange-500/60 shadow-[0_15px_35px_-10px_rgba(239,108,30,0.18)]"
-                }`}
-              >
-                {/* Glowing Top Accent Border */}
-                <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-transparent via-[#EF6C1E] to-transparent opacity-90" />
-
-                {/* Ambient Radial Backlight */}
-                <div
-                  className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full blur-2xl opacity-25 group-hover:opacity-45 transition-all duration-500"
-                  style={{ background: "rgba(239, 108, 30, 0.25)" }}
-                />
-
-                {/* Desktop Right Arrow into Image B */}
-                <div className="hidden lg:block absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-0 h-0 border-y-[16px] border-y-transparent border-l-[16px] border-l-[#EF6C1E] drop-shadow-[0_2px_8px_rgba(239,108,30,0.35)]" />
-                {/* Desktop Down Pointer into Image D */}
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 -bottom-3 z-20 w-0 h-0 border-x-[12px] border-x-transparent border-t-[12px] border-t-[#EF6C1E] drop-shadow-[0_2px_8px_rgba(239,108,30,0.35)]" />
-                {/* Mobile Right Arrow into Image B */}
-                <div className="lg:hidden absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-0 h-0 border-y-[10px] border-y-transparent border-l-[10px] border-l-[#EF6C1E]" />
-
-                {/* Top: Icon Left, Step Number Right */}
-                <div className="flex items-start justify-between relative z-10">
-                  <div className={`p-2 sm:p-2.5 rounded-lg border transition-transform duration-300 group-hover:scale-105 ${
-                    isLight
-                      ? "bg-orange-100 border-orange-300 text-orange-600"
-                      : "bg-orange-500/15 border-orange-500/30 text-orange-400"
-                  }`}>
-                    <BatteryCharging className="w-6 h-6 sm:w-7 sm:h-7 stroke-[1.75]" />
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none ${isLight ? "text-slate-900" : "text-white"}`}>
-                      03
-                    </span>
-                    <div className="w-8 sm:w-10 h-1 bg-[#EF6C1E] rounded-full mt-1.5 shadow-[0_0_8px_rgba(239,108,30,0.5)]" />
-                  </div>
-                </div>
-
-                {/* Middle: Description */}
-                <p className={`text-xs sm:text-[13px] lg:text-sm leading-relaxed font-medium my-auto py-2.5 sm:py-3 relative z-10 ${
-                  isLight ? "text-slate-600" : "text-slate-300"
-                }`}>
-                  Strategic high-uptime charging & smart battery swapping stations deployed across major transit arteries.
-                </p>
-
-                {/* Bottom: Hero Stat & Title */}
-                <div className={`mt-auto pt-2 border-t relative z-10 ${isLight ? "border-orange-200" : "border-white/10"}`}>
-                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none bg-gradient-to-r from-orange-400 via-amber-400 to-orange-500 bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(239,108,30,0.3)]">
-                    75+
-                  </p>
-                  <p className="text-xs sm:text-sm lg:text-base font-extrabold tracking-wider uppercase mt-1 text-[#EF6C1E]">
-                    CHARGING HUBS
-                  </p>
-                </div>
-              </div>
-            </ScrollReveal>
-
-            {/* 6. FEATURE TILE B (Col 4, Row 1 on Desktop | Col 2, Row 3 on Mobile) - BATTERY REPLACEMENT */}
-            <ScrollReveal variant="zoom-in" delay={350} className="col-start-2 row-start-3 lg:col-start-4 lg:row-start-1 h-full">
-              <div className={`relative group overflow-hidden rounded-xl sm:rounded-2xl border shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 min-h-[220px] sm:min-h-[260px] lg:min-h-[290px] h-full w-full flex flex-col justify-between ${
-                isLight ? "border-orange-200 bg-white" : "border-slate-800/80 hover:border-orange-500/50 bg-[#0B0F19]"
-              }`}>
-                {/* Background Battery Swap Photo with Smooth Zoom & Cinematic Lighting */}
-                <div className="absolute inset-0 z-0 overflow-hidden">
+                {/* Image Frame */}
+                <div className="relative overflow-hidden rounded-[20px] aspect-[16/10] w-full shrink-0 bg-slate-100 dark:bg-slate-900">
                   <img
                     src={gbgBatteryReplacementImg}
                     alt="GoBabyGo Cabs EV Battery Replacement & Maintenance"
                     className="w-full h-full object-cover object-[center_52%] scale-100 group-hover:scale-105 transition-transform duration-700 ease-out"
                     loading="lazy"
                   />
-                  {/* Subtle Ambient Vignette for depth and badge contrast */}
-                  <div className={`absolute inset-0 transition-opacity duration-500 ${
-                    isLight
-                      ? "bg-gradient-to-t from-black/35 via-transparent to-black/25"
-                      : "bg-gradient-to-t from-[#090d16]/70 via-transparent to-black/40"
-                  }`} />
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-transparent pointer-events-none" />
                 </div>
 
-                {/* Top Badge */}
-                <div className="relative z-10 w-full p-3 sm:p-4">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] sm:text-[10px] font-bold tracking-widest uppercase border backdrop-blur-md shadow-md whitespace-nowrap ${
-                    isLight ? "bg-white/90 text-orange-700 border-orange-200" : "bg-black/60 text-orange-400 border-orange-500/30"
+                {/* Card Content */}
+                <div className="p-1 sm:p-1.5 pt-3.5 sm:pt-4 flex flex-col flex-1">
+                  <h3 className={`text-base sm:text-lg font-bold tracking-tight line-clamp-1 ${isLight ? "text-slate-900" : "text-white"}`}>
+                    Energy & Charging Grid
+                  </h3>
+                  <p className={`text-xs sm:text-[13px] leading-relaxed mt-1 line-clamp-2 ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+                    Strategic high-uptime charging & smart battery swapping stations deployed across major transit arteries.
+                  </p>
+
+                  {/* Specs Row with Icons */}
+                  <div className={`flex items-center justify-between text-[11px] sm:text-xs mt-3 pt-3 border-t ${
+                    isLight ? "border-slate-100 text-slate-500" : "border-white/5 text-slate-400"
                   }`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
-                    BATTERY REPLACEMENT
-                  </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <BatteryCharging className="w-3.5 h-3.5 text-[#EF6C1E]" />
+                      75+ Hubs
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-slate-400" />
+                      &lt;2 Min Swap
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                      24/7 Uptime
+                    </span>
+                  </div>
+
+                  {/* Pill Chips Row */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      Smart Swap
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      Fast Charge
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      High Uptime
+                    </span>
+                  </div>
+
+                  {/* Bottom Stat & Pill Action Button */}
+                  <div className={`mt-auto pt-3.5 border-t flex items-center justify-between gap-3 ${
+                    isLight ? "border-slate-100" : "border-white/5"
+                  }`}>
+                    <div>
+                      <span className="text-xl sm:text-2xl font-black text-[#EF6C1E] tracking-tight leading-none block">
+                        75+
+                      </span>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mt-0.5">
+                        CHARGING HUBS
+                      </span>
+                    </div>
+
+                    <a
+                      href="#gbgev-section"
+                      className={`inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-semibold transition-all duration-200 active:scale-95 shadow-sm ${
+                        isLight
+                          ? "bg-slate-900 text-white hover:bg-slate-800"
+                          : "bg-white text-slate-900 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span>Hubs</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </ScrollReveal>
 
-            {/* 7. FEATURE TILE D (Col 3, Row 2 on Desktop | Col 1, Row 4 on Mobile) - MULTI-BRAND FLEET */}
-            <ScrollReveal variant="zoom-in" delay={450} className="col-start-1 row-start-4 lg:col-start-3 lg:row-start-2 h-full">
-              <div className={`relative group overflow-visible rounded-xl sm:rounded-2xl border shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 min-h-[220px] sm:min-h-[260px] lg:min-h-[290px] h-full w-full flex flex-col justify-between ${
-                isLight ? "border-blue-200 bg-white" : "border-slate-800/80 hover:border-blue-500/50 bg-[#0B0F19]"
-              }`}>
-                {/* Desktop Right Arrow into Card 04 */}
-                <div className="hidden lg:block absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-0 h-0 border-y-[16px] border-y-transparent border-l-[16px] border-l-[#2563EB] drop-shadow-[0_2px_8px_rgba(37,99,235,0.35)]" />
-                {/* Mobile Right Arrow into Card 04 */}
-                <div className="lg:hidden absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-0 h-0 border-y-[10px] border-y-transparent border-l-[10px] border-l-[#2563EB]" />
-
-                {/* Background Multi-Brand EV Fleet Showroom Photo with Smooth Zoom & Cinematic Lighting */}
-                <div className="absolute inset-0 z-0 overflow-hidden rounded-xl sm:rounded-2xl">
+            {/* 4. CARD 04 - MULTI-BRAND FLEET */}
+            <ScrollReveal variant="fade-up" delay={400} className="h-full">
+              <div
+                className={`relative group h-full rounded-[26px] sm:rounded-[28px] p-3.5 sm:p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${
+                  isLight
+                    ? "bg-white border border-slate-200/90 shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:border-slate-300"
+                    : "bg-[#0D1322] border border-white/10 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.6)] hover:border-white/20"
+                }`}
+              >
+                {/* Image Frame */}
+                <div className="relative overflow-hidden rounded-[20px] aspect-[16/10] w-full shrink-0 bg-slate-100 dark:bg-slate-900">
                   <img
                     src={gbgMultiBrandFleetImg}
                     alt="GoBabyGo Cabs GBGX Multi-Brand EV Showroom & Fleet Lineup"
                     className="w-full h-full object-cover object-[center_45%] scale-100 group-hover:scale-105 transition-transform duration-700 ease-out"
                     loading="lazy"
                   />
-                  {/* Subtle Ambient Vignette for depth and badge contrast */}
-                  <div className={`absolute inset-0 transition-opacity duration-500 ${
-                    isLight
-                      ? "bg-gradient-to-t from-black/35 via-transparent to-black/25"
-                      : "bg-gradient-to-t from-[#090d16]/70 via-transparent to-black/40"
-                  }`} />
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-transparent to-transparent pointer-events-none" />
                 </div>
 
-                {/* Top Badge */}
-                <div className="relative z-10 w-full p-3 sm:p-4">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] sm:text-[10px] font-bold tracking-widest uppercase border backdrop-blur-md shadow-md whitespace-nowrap ${
-                    isLight ? "bg-white/90 text-blue-700 border-blue-200" : "bg-black/60 text-blue-400 border-blue-500/30"
+                {/* Card Content */}
+                <div className="p-1 sm:p-1.5 pt-3.5 sm:pt-4 flex flex-col flex-1">
+                  <h3 className={`text-base sm:text-lg font-bold tracking-tight line-clamp-1 ${isLight ? "text-slate-900" : "text-white"}`}>
+                    Nationwide Footprint
+                  </h3>
+                  <p className={`text-xs sm:text-[13px] leading-relaxed mt-1 line-clamp-2 ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+                    Rapid nationwide footprint spanning Tier-1, Tier-2, and major metropolitan clusters across India.
+                  </p>
+
+                  {/* Specs Row with Icons */}
+                  <div className={`flex items-center justify-between text-[11px] sm:text-xs mt-3 pt-3 border-t ${
+                    isLight ? "border-slate-100 text-slate-500" : "border-white/5 text-slate-400"
                   }`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-pulse" />
-                    MULTI-BRAND FLEET
-                  </span>
-                </div>
-              </div>
-            </ScrollReveal>
-
-            {/* 8. BLOCK 04 (Col 4, Row 2 on Desktop | Col 2, Row 4 on Mobile) - GBG ROYAL BLUE */}
-            <ScrollReveal variant="zoom-in" delay={400} className="col-start-2 row-start-4 lg:col-start-4 lg:row-start-2 h-full">
-              <div
-                className={`relative group p-4 sm:p-6 lg:p-7 rounded-xl sm:rounded-2xl border flex flex-col justify-between overflow-visible transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 min-h-[220px] sm:min-h-[260px] lg:min-h-[290px] h-full w-full ${
-                  isLight
-                    ? "bg-gradient-to-br from-blue-50/90 via-white to-slate-50 border-blue-200/90 shadow-md hover:border-blue-400"
-                    : "bg-gradient-to-br from-[#10172e]/95 via-[#0e1426]/95 to-[#090d17]/95 border-blue-500/30 hover:border-blue-500/60 shadow-[0_15px_35px_-10px_rgba(37,99,235,0.18)]"
-                }`}
-              >
-                {/* Glowing Top Accent Border */}
-                <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-transparent via-[#2563EB] to-transparent opacity-90" />
-
-                {/* Ambient Radial Backlight */}
-                <div
-                  className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full blur-2xl opacity-25 group-hover:opacity-45 transition-all duration-500"
-                  style={{ background: "rgba(37, 99, 235, 0.25)" }}
-                />
-
-                {/* Desktop Up Pointer into Image B */}
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 -top-3 z-20 w-0 h-0 border-x-[12px] border-x-transparent border-b-[12px] border-b-[#2563EB] drop-shadow-[0_2px_8px_rgba(37,99,235,0.35)]" />
-
-                {/* Top: Icon Left, Step Number Right */}
-                <div className="flex items-start justify-between relative z-10">
-                  <div className={`p-2 sm:p-2.5 rounded-lg border transition-transform duration-300 group-hover:scale-105 ${
-                    isLight
-                      ? "bg-blue-100 border-blue-300 text-blue-600"
-                      : "bg-blue-500/15 border-blue-500/30 text-blue-400"
-                  }`}>
-                    <Globe2 className="w-6 h-6 sm:w-7 sm:h-7 stroke-[1.75]" />
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none ${isLight ? "text-slate-900" : "text-white"}`}>
-                      04
+                    <span className="inline-flex items-center gap-1.5">
+                      <Globe2 className="w-3.5 h-3.5 text-[#2563EB]" />
+                      30+ Cities
                     </span>
-                    <div className="w-8 sm:w-10 h-1 bg-[#2563EB] rounded-full mt-1.5 shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
+                    <span className="inline-flex items-center gap-1.5">
+                      <Store className="w-3.5 h-3.5 text-slate-400" />
+                      GBGX Stores
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                      Pan-India
+                    </span>
                   </div>
-                </div>
 
-                {/* Middle: Description */}
-                <p className={`text-xs sm:text-[13px] lg:text-sm leading-relaxed font-medium my-auto py-2.5 sm:py-3 relative z-10 ${
-                  isLight ? "text-slate-600" : "text-slate-300"
-                }`}>
-                  Rapid nationwide footprint spanning Tier-1, Tier-2, and major metropolitan clusters across India.
-                </p>
+                  {/* Pill Chips Row */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      Tier 1 &amp; 2
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      Retail Network
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium border ${
+                      isLight ? "bg-slate-100 text-slate-600 border-slate-200/60" : "bg-white/[0.06] text-slate-300 border-white/10"
+                    }`}>
+                      Multi-Brand
+                    </span>
+                  </div>
 
-                {/* Bottom: Hero Stat & Title */}
-                <div className={`mt-auto pt-2 border-t relative z-10 ${isLight ? "border-blue-200" : "border-white/10"}`}>
-                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-400 bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(37,99,235,0.3)]">
-                    30+
-                  </p>
-                  <p className="text-xs sm:text-sm lg:text-base font-extrabold tracking-wider uppercase mt-1 text-[#2563EB]">
-                    CITIES COVERED
-                  </p>
+                  {/* Bottom Stat & Pill Action Button */}
+                  <div className={`mt-auto pt-3.5 border-t flex items-center justify-between gap-3 ${
+                    isLight ? "border-slate-100" : "border-white/5"
+                  }`}>
+                    <div>
+                      <span className="text-xl sm:text-2xl font-black text-[#2563EB] tracking-tight leading-none block">
+                        30+
+                      </span>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mt-0.5">
+                        CITIES COVERED
+                      </span>
+                    </div>
+
+                    <a
+                      href="#gbgx-section"
+                      className={`inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-semibold transition-all duration-200 active:scale-95 shadow-sm ${
+                        isLight
+                          ? "bg-slate-900 text-white hover:bg-slate-800"
+                          : "bg-white text-slate-900 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span>Lineup</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </ScrollReveal>
@@ -1660,712 +2308,672 @@ function MainApp({ onReplayIntro }) {
           BALANCED & STRUCTURED SECTION: GBG EV (FLEET & HUB OPERATIONS)
           ========================================================================
         */}
-        <div
-          id="gbgev-section"
-          className="mb-28 rounded-3xl bg-white text-slate-900 p-8 sm:p-12 md:p-16 lg:p-20 shadow-2xl relative overflow-hidden border-t-8 border-l-4 border-r-4 border-b-8 border-t-[#EF6C1E] border-l-[#EF6C1E] border-r-[#2563EB] border-b-[#2563EB] max-w-[1600px] mx-auto w-full"
-          style={{
-            boxShadow: "0 25px 60px -15px rgba(239, 108, 30, 0.14), 0 0 0 1px rgba(37, 99, 235, 0.1)"
-          }}
-        >
-          {/* Subtle Ambient Glows */}
-          <div className="absolute top-0 right-1/4 w-[32rem] h-[32rem] bg-[#EF6C1E]/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-1/4 left-1/4 w-[28rem] h-[28rem] bg-[#2563EB]/5 rounded-full blur-3xl pointer-events-none" />
-
-          {/* Header Bar */}
-          <ScrollReveal variant="fade-up" delay={50} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-10 border-b border-slate-200">
-            <div className="flex items-center gap-6">
-              <div className="p-3.5 sm:p-4 bg-white rounded-2xl border border-[#EF6C1E]/20 shadow-[0_4px_20px_rgba(239,108,30,0.12)] shrink-0 flex items-center justify-center min-w-[95px] overflow-hidden group hover:border-[#EF6C1E]/50 transition-all">
-                <ExactGbgEvLogo className="h-16 sm:h-20 md:h-22 w-auto" />
-              </div>
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#EF6C1E]/10 border border-[#EF6C1E]/30 text-[#EF6C1E] shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
-                  <span>Commercial EV Fleet & Hubs</span>
-                </div>
-                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
-                  GBG <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EF6C1E] via-orange-500 to-[#2563EB]">EV Ecosystem</span>
-                </h3>
-                <p className="text-sm sm:text-base text-slate-600 font-medium flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB]" />
-                  <span>Powering India's electric future with smart fleets, battery hubs, and sustainable transit</span>
-                </p>
-              </div>
-            </div>
-
-            <a
-              href="https://gbgev.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 px-8 py-3.5 rounded-full text-sm font-bold text-white bg-gradient-to-r from-[#EF6C1E] to-[#2563EB] hover:opacity-95 shadow-lg shadow-orange-500/25 transition-all hover:scale-105 shrink-0"
-            >
-              <span>Visit gbgev.com</span>
-              <ExternalLink size={16} />
-            </a>
-          </ScrollReveal>
-
-          <div className="space-y-16 mt-14">
-            
-            {/* WHO WE ARE & SCOOTER SHOWCASE */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-14 items-center">
-              
-              {/* Left Column: Who We Are Structured Content Block */}
-              <ScrollReveal
-                variant="fade-right"
-                delay={100}
-                className="lg:col-span-7 xl:col-span-8 flex flex-col justify-center space-y-6"
-              >
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#EF6C1E]/10 border border-[#EF6C1E]/30 text-[#EF6C1E] shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
-                    <span>Who We Are?</span>
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2 leading-tight tracking-tight">
-                    Powering India's Green Mobility Revolution
-                  </h3>
-                </div>
-
-                <div className="space-y-3.5 text-sm sm:text-base text-slate-600 leading-relaxed text-justify">
-                  <p>
-                    Founded in <strong>2021</strong> as <strong>GoBabyGo Cabs (OPC) Private Limited</strong>, our mission has always been to redefine urban mobility with sustainable and inclusive solutions.
-                  </p>
-                  <p>
-                    By <strong>2023</strong>, we expanded into <strong>GoBabyGo Cabs Private Limited</strong> to serve the passenger transport market, while also launching <a href="https://gbgev.com/" target="_blank" rel="noopener noreferrer" className="text-[#2563EB] font-bold underline hover:text-[#EF6C1E]">GBG EV</a> as a dedicated platform for EV rentals and investments.
-                  </p>
-                  <p>
-                    GBG EV is a fast-growing EV investment and fleet management company transforming last-mile delivery with clean, cost-efficient electric vehicles. By connecting investors with real EV assets, we create a <strong>win-win model</strong> where delivery riders get access to reliable scooters, businesses reduce costs, and investors enjoy steady monthly income.
-                  </p>
-                  <p>
-                    Headquartered in <strong>Noida</strong> with <strong>75+ operational hubs</strong> across India, GBG EV manages a rapidly growing fleet of <strong>10,000+ electric vehicles</strong> backed by the trust of <strong>300+ investors</strong>.
-                  </p>
-                  <div className="p-3.5 bg-blue-50/80 border-l-4 border-[#2563EB] rounded-r-xl">
-                    <p className="text-xs sm:text-sm text-slate-700 font-semibold italic">
-                      As a proud subsidiary of GoBabyGo Cabs Private Limited, GBG EV is not just building a business - we're powering India's transition to a greener, smarter, and more sustainable future.
-                    </p>
-                  </div>
-                </div>
-              </ScrollReveal>
-
-              {/* Right Column: Commercial EV Scooter Image */}
-              <ScrollReveal
-                variant="fade-left"
-                delay={150}
-                className="lg:col-span-5 xl:col-span-4 flex items-center justify-center"
-              >
-                <div className="relative w-full max-w-[440px] flex items-center justify-center p-4">
-                  <GbgEvScooterImage />
-                </div>
-              </ScrollReveal>
-
-            </div>
-
-            {/* 
-              ========================================================================
-              HOW IT WORKS: MINIMAL HORIZONTAL STEP PROCESS
-              ========================================================================
-            */}
-            <ScrollReveal variant="fade-up" delay={100} className="pt-10 border-t border-slate-200">
-              <div className="text-center max-w-xl mx-auto mb-14">
-                <div className="flex justify-center mb-3">
-                  <svg viewBox="0 0 60 40" className="w-8 h-auto text-[#EF6C1E] opacity-90 fill-current" aria-hidden="true">
-                    <path d="M 28 6 L 30 10 L 26 10 Z M 36 8 L 38 12 L 34 12 Z M 22 14 L 24 18 L 20 18 Z M 32 16 L 35 21 L 29 21 Z M 40 20 L 42 24 L 38 24 Z M 18 24 L 20 28 L 16 28 Z M 26 26 L 29 31 L 23 31 Z M 36 28 L 38 32 L 34 32 Z M 30 34 L 32 38 L 28 38 Z" />
-                  </svg>
-                </div>
-
-                <h4 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  How It Works
-                </h4>
-                <p className="text-xs sm:text-sm text-slate-500 mt-2 font-normal">
-                  Your journey to electric mobility in 4 simple steps
-                </p>
-              </div>
-
-              {/* Horizontal Steps Grid with Alternating Wavy Dashed Connectors */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4 relative items-start">
-                
-                {/* STEP 1 */}
-                <div className="flex flex-col items-center text-center relative px-2">
-                  <div className="relative mb-5 flex items-center justify-center">
-                    <span className="absolute -top-2 -left-2 text-xs font-semibold text-slate-400 select-none">
-                      1
-                    </span>
-                    <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full bg-white border border-slate-200 shadow-xl shadow-slate-200/70 flex items-center justify-center text-[#EF6C1E] transition-transform duration-300 hover:scale-105">
-                      <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center">
-                        <Smartphone size={22} strokeWidth={2.2} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <h5 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5">
-                    Download the Partner App
-                  </h5>
-                  <p className="text-xs text-slate-500 leading-relaxed max-w-[220px]">
-                    Get started by downloading the GBG EV app from the Play Store or App Store.
-                  </p>
-
-                  <div className="hidden lg:block absolute top-9 left-[70%] w-[60%] pointer-events-none z-0">
-                    <svg viewBox="0 0 100 36" className="w-full h-8 overflow-visible" fill="none">
-                      <path d="M 0 8 Q 50 32 100 8" stroke="#CBD5E1" strokeWidth="1.8" strokeDasharray="4 4" />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* STEP 2 */}
-                <div className="flex flex-col items-center text-center relative px-2">
-                  <div className="relative mb-5 flex items-center justify-center">
-                    <span className="absolute -top-2 -left-2 text-xs font-semibold text-slate-400 select-none">
-                      2
-                    </span>
-                    <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full border-2 border-dashed border-orange-400/80 p-1 flex items-center justify-center transition-transform duration-300 hover:scale-105">
-                      <div className="w-full h-full rounded-full bg-orange-50 flex items-center justify-center text-[#EF6C1E]">
-                        <Compass size={22} strokeWidth={2.2} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <h5 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5">
-                    Choose your GBG EV
-                  </h5>
-                  <p className="text-xs text-slate-500 leading-relaxed max-w-[220px]">
-                    Browse through our wide range of electric vehicles and find the perfect one for you.
-                  </p>
-
-                  <div className="hidden lg:block absolute top-7 left-[70%] w-[60%] pointer-events-none z-0">
-                    <svg viewBox="0 0 100 36" className="w-full h-8 overflow-visible" fill="none">
-                      <path d="M 0 28 Q 50 4 100 28" stroke="#CBD5E1" strokeWidth="1.8" strokeDasharray="4 4" />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* STEP 3 */}
-                <div className="flex flex-col items-center text-center relative px-2">
-                  <div className="relative mb-5 flex items-center justify-center">
-                    <span className="absolute -top-2 -left-2 text-xs font-semibold text-slate-400 select-none">
-                      3
-                    </span>
-                    <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full border-2 border-dotted border-blue-400/90 p-1 flex items-center justify-center transition-transform duration-300 hover:scale-105">
-                      <div className="w-full h-full rounded-full bg-blue-50 flex items-center justify-center text-[#2563EB]">
-                        <CalendarCheck size={22} strokeWidth={2.2} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <h5 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5">
-                    Book your EV
-                  </h5>
-                  <p className="text-xs text-slate-500 leading-relaxed max-w-[220px]">
-                    Complete your booking with easy financing options and exclusive offers.
-                  </p>
-
-                  <div className="hidden lg:block absolute top-9 left-[70%] w-[60%] pointer-events-none z-0">
-                    <svg viewBox="0 0 100 36" className="w-full h-8 overflow-visible" fill="none">
-                      <path d="M 0 8 Q 50 32 100 8" stroke="#CBD5E1" strokeWidth="1.8" strokeDasharray="4 4" />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* STEP 4 */}
-                <div className="flex flex-col items-center text-center relative px-2">
-                  <div className="relative mb-5 flex items-center justify-center">
-                    <span className="absolute -top-2 -left-2 text-xs font-semibold text-slate-400 select-none">
-                      4
-                    </span>
-                    <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full border-2 border-slate-200 ring-2 ring-[#EF6C1E]/20 p-1 flex items-center justify-center shadow-lg shadow-orange-500/10 transition-transform duration-300 hover:scale-105">
-                      <div className="w-full h-full rounded-full bg-gradient-to-br from-orange-50 to-blue-50 flex items-center justify-center text-[#EF6C1E]">
-                        <KeyRound size={22} strokeWidth={2.2} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <h5 className="text-sm sm:text-base font-bold text-slate-900 mb-1.5">
-                    Pickup & Ride
-                  </h5>
-                  <p className="text-xs text-slate-500 leading-relaxed max-w-[220px]">
-                    Pick up your EV from the nearest centre or get it delivered to your doorstep.
-                  </p>
-                </div>
-
-              </div>
-            </ScrollReveal>
-
-            {/* 
-              ========================================================================
-              MISSION & VISION CARDS (STAGGERED OUTLINE CARDS)
-              ========================================================================
-            */}
-            <div className="pt-16 pb-8 border-t border-slate-200">
-              <ScrollReveal variant="fade-up" className="max-w-4xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-14 md:gap-12 items-start pt-6">
-                  
-                  {/* LEFT CARD: MISSION (Elevated Position) */}
-                  <div className="relative flex flex-col items-center">
-                    <div className="relative -mb-6 z-10 flex flex-col items-center">
-                      <div className="w-16 h-16 rounded-full bg-white border-2 border-[#EF6C1E] shadow-xl flex items-center justify-center text-[#EF6C1E] transition-transform duration-300 hover:scale-110">
-                        <Target size={28} strokeWidth={2.2} />
-                      </div>
-                      <span className="absolute -top-1 -right-2 w-4 h-4 rounded-full bg-[#EF6C1E]/30 blur-[0.5px]" />
-                    </div>
-
-                    <div className="w-full rounded-[2.8rem] border-2 border-[#EF6C1E] bg-white/70 backdrop-blur-sm pt-14 pb-14 px-8 sm:px-10 text-center flex flex-col items-center justify-center min-h-[350px] shadow-lg shadow-orange-500/5 relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-orange-500 group">
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 bg-white flex items-center gap-2">
-                        <span className="text-base sm:text-lg font-black uppercase tracking-[0.25em] text-[#EF6C1E]">
-                          MISSION
-                        </span>
-                      </div>
-
-                      <span className="absolute bottom-7 -left-2 w-5 h-5 rounded-full bg-[#EF6C1E]/35" />
-
-                      <p className="text-sm sm:text-base font-semibold text-slate-700 leading-relaxed max-w-xs mx-auto">
-                        Helping investors earn monthly income while giving riders and businesses affordable, clean EV rides, and moving India towards a zero-emission future.
-                      </p>
-
-                      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2.5">
-                        <span className="w-20 h-1.5 bg-[#EF6C1E] rounded-full" />
-                        <span className="w-2 h-2 bg-[#EF6C1E] rounded-full" />
-                        <span className="w-2 h-2 bg-[#EF6C1E]/60 rounded-full" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* RIGHT CARD: VISION (Staggered Downwards Position) */}
-                  <div className="relative flex flex-col items-center md:mt-20">
-                    <div className="relative -mb-6 z-10 flex flex-col items-center">
-                      <div className="w-16 h-16 rounded-full bg-white border-2 border-[#2563EB] shadow-xl flex items-center justify-center text-[#2563EB] transition-transform duration-300 hover:scale-110">
-                        <Lightbulb size={28} strokeWidth={2.2} />
-                      </div>
-                      <span className="absolute -top-1 -right-2 w-4 h-4 rounded-full bg-[#2563EB]/30 blur-[0.5px]" />
-                    </div>
-
-                    <div className="w-full rounded-[2.8rem] border-2 border-[#2563EB] bg-white/70 backdrop-blur-sm pt-14 pb-14 px-8 sm:px-10 text-center flex flex-col items-center justify-center min-h-[350px] shadow-lg shadow-blue-500/5 relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-blue-500 group">
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 bg-white flex items-center gap-2">
-                        <span className="text-base sm:text-lg font-black uppercase tracking-[0.25em] text-[#2563EB]">
-                          VISION
-                        </span>
-                      </div>
-
-                      <span className="absolute bottom-7 -right-2 w-5 h-5 rounded-full bg-[#2563EB]/35" />
-
-                      <p className="text-sm sm:text-base font-semibold text-slate-700 leading-relaxed max-w-xs mx-auto">
-                        Making city travel and deliveries simple, affordable, and eco-friendly with EVs, while building a trusted investment platform.
-                      </p>
-
-                      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2.5">
-                        <span className="w-20 h-1.5 bg-[#2563EB] rounded-full" />
-                        <span className="w-2 h-2 bg-[#2563EB] rounded-full" />
-                        <span className="w-2 h-2 bg-[#2563EB]/60 rounded-full" />
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-                <div className="text-center md:text-right pt-10 pr-6">
-                  <p className="text-xs sm:text-[13px] font-medium italic text-slate-400 tracking-wider">
-                    ...clean mobility our commitment
-                  </p>
-                </div>
-              </ScrollReveal>
-            </div>
-
-            {/* The Journey of GBGEV: Staggered Horizontal Timeline Design */}
-            <div className="space-y-12 pt-16 border-t border-slate-200">
-              <ScrollReveal variant="fade-up" className="text-center max-w-2xl mx-auto space-y-2">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#EF6C1E]/10 border border-[#EF6C1E]/30 text-[#EF6C1E] shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
-                  <span>Our Story</span>
-                </div>
-                <h4 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
-                  Our Story: The Journey of GBGEV
-                </h4>
-                <p className="text-xs sm:text-sm text-slate-600">
-                  Company timeline and major evolutionary milestones from inception to pan-India leadership.
-                </p>
-              </ScrollReveal>
-
-              {/* Staggered Company Timeline (Inspired by reference presentation pack) */}
-              <ScrollReveal variant="fade-up" delay={100} className="relative pt-12 pb-16 px-4">
-                <div className="hidden xl:block absolute top-[52%] left-12 right-12 h-[2px] bg-slate-200 z-0 pointer-events-none" />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-8 relative z-10">
-                  
-                  {/* Milestone 1: 2021 */}
-                  <div className="flex flex-col items-center xl:items-start text-center xl:text-left space-y-6 group">
-                    <div className="space-y-1">
-                      <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                        The first concept and foundation setup.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-center xl:items-start relative py-2">
-                      <span className="w-3 h-3 rounded-full bg-[#EF6C1E] ring-4 ring-orange-100 mb-3 group-hover:scale-125 transition-transform" />
-                      <h5 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                        2021
-                      </h5>
-                    </div>
-
-                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm w-full transition-all duration-300 hover:border-orange-500 hover:shadow-md">
-                      <p className="text-xs font-bold text-slate-900 mb-1">Founded GoBabyGo Cabs</p>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Established GoBabyGo Cabs, laying the foundation for our journey in the Corporate mobility sector.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Milestone 2: 2022 */}
-                  <div className="flex flex-col items-center xl:items-start text-center xl:text-left space-y-6 group xl:mt-[-4rem]">
-                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm w-full transition-all duration-300 hover:border-blue-500 hover:shadow-md">
-                      <p className="text-xs font-bold text-slate-900 mb-1">Explored the EV Industry</p>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Ventured into the electric vehicle industry, researching sustainable and green mobility solutions for the future.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-center xl:items-start relative py-2">
-                      <h5 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-3">
-                        2022
-                      </h5>
-                      <span className="w-3 h-3 rounded-full bg-[#2563EB] ring-4 ring-blue-100 group-hover:scale-125 transition-transform" />
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                        Initial research & green pilot testing.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Milestone 3: 2023 */}
-                  <div className="flex flex-col items-center xl:items-start text-center xl:text-left space-y-6 group">
-                    <div className="space-y-1">
-                      <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                        Official incorporation of GBG EV vertical.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-center xl:items-start relative py-2">
-                      <span className="w-3 h-3 rounded-full bg-[#EF6C1E] ring-4 ring-orange-100 mb-3 group-hover:scale-125 transition-transform" />
-                      <h5 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                        2023
-                      </h5>
-                    </div>
-
-                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm w-full transition-all duration-300 hover:border-orange-500 hover:shadow-md">
-                      <p className="text-xs font-bold text-slate-900 mb-1">Launched GBG EV</p>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Officially launched GBG EV as a dedicated platform for electric vehicle rentals and sustainable transportation.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Milestone 4: 2024 */}
-                  <div className="flex flex-col items-center xl:items-start text-center xl:text-left space-y-6 group xl:mt-[-4rem]">
-                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm w-full transition-all duration-300 hover:border-blue-500 hover:shadow-md">
-                      <p className="text-xs font-bold text-slate-900 mb-1">Reached 200 Vehicles</p>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Successfully expanded our active fleet to 200 electric vehicles, marking a significant milestone in our growth.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-center xl:items-start relative py-2">
-                      <h5 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-3">
-                        2024
-                      </h5>
-                      <span className="w-3 h-3 rounded-full bg-[#2563EB] ring-4 ring-blue-100 group-hover:scale-125 transition-transform" />
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                        Rapid scaling across delivery hubs.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Milestone 5: 2025 */}
-                  <div className="flex flex-col items-center xl:items-start text-center xl:text-left space-y-6 group">
-                    <div className="space-y-1">
-                      <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                        Fintech asset leasing expansion.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-center xl:items-start relative py-2">
-                      <span className="w-3 h-3 rounded-full bg-[#EF6C1E] ring-4 ring-orange-100 mb-3 group-hover:scale-125 transition-transform" />
-                      <h5 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                        2025
-                      </h5>
-                    </div>
-
-                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm w-full transition-all duration-300 hover:border-orange-500 hover:shadow-md">
-                      <p className="text-xs font-bold text-slate-900 mb-1">Scaled to 5,000 Vehicles</p>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Rapidly accelerating our mission for eco-friendly transit by scaling our fleet to 5,000 electric vehicles on the road.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Milestone 6: 2026 */}
-                  <div className="flex flex-col items-center xl:items-start text-center xl:text-left space-y-6 group xl:mt-[-4rem]">
-                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm w-full transition-all duration-300 hover:border-[#2563EB] hover:shadow-md">
-                      <p className="text-xs font-bold text-slate-900 mb-1">10,000+ EV Fleet</p>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Achieving a massive milestone of over 10,000 active vehicles, establishing ourselves as a leader in India's EV fleet revolution.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-center xl:items-start relative py-2">
-                      <h5 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-3">
-                        2026
-                      </h5>
-                      <span className="w-3 h-3 rounded-full bg-[#2563EB] ring-4 ring-blue-100 group-hover:scale-125 transition-transform" />
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                        Pan-India clean transit market leadership.
-                      </p>
-                    </div>
-                  </div>
-
-                </div>
-              </ScrollReveal>
-            </div>
-
-            {/* Leader's Message (Positioned right after Our Story) */}
-            <ScrollReveal variant="zoom-in" delay={100} className="mt-12">
-              <div className="max-w-3xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-xl p-8 sm:p-12 relative overflow-hidden">
-                <div className="absolute top-6 left-6 text-6xl font-serif text-[#EF6C1E]/20 select-none pointer-events-none">
-                  “
-                </div>
-                
-                <div className="relative z-10 flex flex-col items-center text-center space-y-6">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#EF6C1E]/10 border border-[#EF6C1E]/30 text-[#EF6C1E] shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
-                    <span>Leader's Message</span>
-                  </div>
-
-                  <p className="text-base sm:text-lg font-serif italic text-slate-800 leading-relaxed max-w-2xl">
-                    "Every solution we develop and every EV initiative we deliver is focused on driving innovation, sustainability, and measurable value for communities and businesses."
-                  </p>
-
-                  <div className="pt-2">
-                    <p className="text-sm font-bold text-slate-900">— Akash Ali</p>
-                    <p className="text-xs text-[#EF6C1E] font-bold uppercase tracking-wider mt-0.5">
-                      Founder & CEO, GBG EV
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </ScrollReveal>
-
-          </div>
-        </div>
-
         {/* 
           ========================================================================
-          BALANCED & STRUCTURED SECTION: GBG X (MULTI-BRAND EV PLATFORM)
+          COMBINED UNIFIED SECTION: GBG EV & GBG X ECOSYSTEM
+          Commercial Fleet Logistics & Multi-Brand EV Retail Platform
           ========================================================================
         */}
         <div
-          id="gbgx-section"
-          className="mb-28 rounded-3xl bg-[#05070B] text-slate-100 p-8 sm:p-12 md:p-16 lg:p-20 relative overflow-hidden border-t-8 border-l-4 border-r-4 border-b-8 border-t-[#EF6C1E] border-l-[#EF6C1E] border-r-[#2563EB] border-b-[#2563EB] max-w-[1600px] mx-auto w-full shadow-2xl"
+          className={`mb-28 rounded-3xl p-6 sm:p-10 md:p-14 lg:p-18 relative overflow-hidden border transition-colors duration-300 max-w-[1600px] mx-auto w-full ${
+            isLight
+              ? "bg-white/95 text-slate-900 border-slate-200/90 shadow-2xl shadow-slate-200/50"
+              : "bg-[#090D17]/95 text-slate-100 border-white/10 shadow-2xl shadow-black/80 backdrop-blur-xl"
+          }`}
           style={{
-            boxShadow:
-              "0 25px 60px -15px rgba(239, 108, 30, 0.2), 0 0 0 1px rgba(37, 99, 235, 0.15), inset 0 0 35px rgba(239, 108, 30, 0.05)"
+            boxShadow: isLight
+              ? "0 20px 50px -10px rgba(239, 108, 30, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8)"
+              : "0 25px 60px -15px rgba(239, 108, 30, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.08)"
           }}
         >
-          {/* Dual Brand Ambient Glows */}
-          <div className="absolute top-0 right-1/4 w-[32rem] h-[32rem] bg-[#EF6C1E]/12 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-1/4 left-1/4 w-[28rem] h-[28rem] bg-[#2563EB]/10 rounded-full blur-3xl pointer-events-none" />
+          {/* Subtle Top Brand Accent Line */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#EF6C1E] via-amber-400 to-[#2563EB]" />
 
-          {/* Header Bar */}
-          <ScrollReveal variant="fade-up" delay={50} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-10 border-b border-white/10">
-            <div className="flex items-center gap-6">
-              <div className="p-3.5 sm:p-4 bg-black/90 rounded-2xl border border-[#EF6C1E]/30 shadow-[0_0_20px_rgba(239,108,30,0.18)] shrink-0 flex items-center justify-center min-w-[95px] overflow-hidden group hover:border-[#EF6C1E]/60 transition-all">
-                <ExactGbgxLogo className="h-10 sm:h-12 w-auto" />
-              </div>
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#EF6C1E]/15 border border-[#EF6C1E]/35 text-[#EF6C1E] shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
-                  <span>Multi-Brand EV Platform</span>
-                </div>
-                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
-                  GBG <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EF6C1E] via-orange-400 to-[#2563EB]">X Platform</span>
-                </h3>
-                <p className="text-sm sm:text-base text-slate-300 font-medium flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB]" />
-                  <span>India's leading multi-brand EV marketplace & spare parts ecosystem</span>
-                </p>
-              </div>
+          {/* Ambient Glow Accents */}
+          <div className="absolute top-0 right-1/4 w-[36rem] h-[36rem] bg-[#EF6C1E]/8 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-1/4 left-1/4 w-[32rem] h-[32rem] bg-[#2563EB]/8 rounded-full blur-3xl pointer-events-none" />
+
+          {/* ====================================================================
+              1. MASTER ENTERPRISE ECOSYSTEM HEADER & SCALE METRICS
+              ==================================================================== */}
+          <ScrollReveal variant="fade-up" delay={50} className={`pb-16 sm:pb-20 border-b ${
+            isLight ? "border-slate-200" : "border-white/10"
+          }`}>
+
+            {/* ── Centered Eyebrow Tag ── */}
+            <div className="flex justify-center mb-7 sm:mb-9">
+              <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-bold tracking-[0.18em] uppercase border ${
+                isLight
+                  ? "bg-white/80 text-slate-500 border-slate-200 shadow-sm"
+                  : "bg-white/[0.04] text-slate-400 border-white/10"
+              }`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#EF6C1E] to-[#2563EB]" />
+                Enterprise EV Ecosystem
+              </span>
             </div>
 
-            <a
-              href="https://gbgx.in/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 px-8 py-3.5 rounded-full text-sm font-bold text-white bg-gradient-to-r from-[#EF6C1E] to-[#2563EB] hover:opacity-95 shadow-lg shadow-orange-500/25 transition-all hover:scale-105 shrink-0"
-            >
-              <span>Visit gbgx.in</span>
-              <ExternalLink size={16} />
-            </a>
+            {/* ── Centered Headline + Subtitle ── */}
+            <div className="text-center space-y-4 sm:space-y-5 max-w-4xl mx-auto">
+              <h2 className={`text-4xl sm:text-5xl lg:text-6xl xl:text-[68px] font-black tracking-tight leading-[1.06] ${
+                isLight ? "text-slate-900" : "text-white"
+              }`}>
+                Two Strategic Verticals.{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EF6C1E] via-amber-400 to-[#2563EB]">
+                  One Zero-Emission Horizon.
+                </span>
+              </h2>
+              <p className={`text-base sm:text-lg font-normal leading-relaxed max-w-2xl mx-auto ${
+                isLight ? "text-slate-500" : "text-slate-400"
+              }`}>
+                Fleet electrification meets premium multi-brand retail — powering India's EV future through two industry-leading verticals under one enterprise group.
+              </p>
+            </div>
+
+            {/* ── Brand Stats Row ── */}
+            <div className={`mt-14 sm:mt-16 rounded-2xl overflow-hidden ${
+              isLight ? "shadow-xl shadow-slate-100" : "shadow-2xl shadow-black/60"
+            }`}>
+
+              {/* Brand Header Row */}
+              <div className={`grid grid-cols-2 ${isLight ? "bg-slate-50 border border-slate-200" : "bg-white/[0.03] border border-white/[0.06]"}`}>
+                {/* GBG EV Header */}
+                <div className={`flex items-center gap-3 px-8 sm:px-10 py-4 border-r ${isLight ? "border-slate-200" : "border-white/[0.06]"}`}>
+                  <ExactGbgEvLogo className="h-7 sm:h-8 w-auto object-contain shrink-0" />
+                  <span className={`text-[11px] font-bold uppercase tracking-[0.18em] ${isLight ? "text-slate-400" : "text-slate-500"}`}>
+                    Fleet &amp; Logistics
+                  </span>
+                </div>
+                {/* GBG X Header */}
+                <div className="flex items-center gap-3 px-8 sm:px-10 py-4">
+                  <img
+                    src={isLight ? gbgxLogoBlueImg : gbgxLogoWhiteImg}
+                    alt="GBGX"
+                    className={`h-4 sm:h-5 w-auto object-contain shrink-0 ${isLight ? "[filter:hue-rotate(58deg)]" : ""}`}
+                  />
+                  <span className={`text-[11px] font-bold uppercase tracking-[0.18em] ${isLight ? "text-slate-400" : "text-slate-500"}`}>
+                    Multi-Brand Retail
+                  </span>
+                </div>
+              </div>
+
+              {/* Stats Row */}
+              <div className={`grid grid-cols-2 sm:grid-cols-4 ${
+                isLight
+                  ? "bg-white border-x border-b border-slate-200"
+                  : "bg-[#0C101A] border-x border-b border-white/[0.06]"
+              }`}>
+
+                {/* Stat 1: Active Fleets */}
+                <div className={`relative px-8 sm:px-10 py-8 sm:py-10 flex flex-col gap-1 border-b sm:border-b-0 border-r ${
+                  isLight ? "border-slate-100" : "border-white/[0.05]"
+                }`}>
+                  <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#EF6C1E] to-amber-400" />
+                  <div className={`text-5xl sm:text-6xl font-black tracking-tight leading-none tabular-nums ${isLight ? "text-slate-900" : "text-white"}`}>
+                    10K<span className="text-[#EF6C1E]">+</span>
+                  </div>
+                  <p className={`text-[11px] sm:text-xs font-extrabold uppercase tracking-widest mt-3 ${isLight ? "text-[#EA580C]" : "text-[#EF6C1E]"}`}>
+                    Active Fleets
+                  </p>
+                  <p className={`text-[11px] leading-snug ${isLight ? "text-slate-400" : "text-slate-500"}`}>
+                    Commercial EVs in daily operations
+                  </p>
+                </div>
+
+                {/* Stat 2: Swap Hubs */}
+                <div className={`relative px-8 sm:px-10 py-8 sm:py-10 flex flex-col gap-1 border-b sm:border-b-0 border-r ${
+                  isLight ? "border-slate-100" : "border-white/[0.05]"
+                }`}>
+                  <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#EF6C1E] to-amber-400" />
+                  <div className={`text-5xl sm:text-6xl font-black tracking-tight leading-none tabular-nums ${isLight ? "text-slate-900" : "text-white"}`}>
+                    75<span className="text-[#EF6C1E]">+</span>
+                  </div>
+                  <p className={`text-[11px] sm:text-xs font-extrabold uppercase tracking-widest mt-3 ${isLight ? "text-[#EA580C]" : "text-[#EF6C1E]"}`}>
+                    Swap Hubs
+                  </p>
+                  <p className={`text-[11px] leading-snug ${isLight ? "text-slate-400" : "text-slate-500"}`}>
+                    Pan-India charging network
+                  </p>
+                </div>
+
+                {/* Stat 3: Asset Partners */}
+                <div className={`relative px-8 sm:px-10 py-8 sm:py-10 flex flex-col gap-1 border-b sm:border-b-0 border-r ${
+                  isLight ? "border-slate-100" : "border-white/[0.05]"
+                }`}>
+                  <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#A855F7] to-fuchsia-400" />
+                  <div className={`text-5xl sm:text-6xl font-black tracking-tight leading-none tabular-nums ${isLight ? "text-slate-900" : "text-white"}`}>
+                    300<span className="text-[#A855F7]">+</span>
+                  </div>
+                  <p className={`text-[11px] sm:text-xs font-extrabold uppercase tracking-widest mt-3 ${isLight ? "text-purple-600" : "text-[#C084FC]"}`}>
+                    Asset Partners
+                  </p>
+                  <p className={`text-[11px] leading-snug ${isLight ? "text-slate-400" : "text-slate-500"}`}>
+                    Vehicle investors earning yield
+                  </p>
+                </div>
+
+                {/* Stat 4: OEM Certified */}
+                <div className={`relative px-8 sm:px-10 py-8 sm:py-10 flex flex-col gap-1`}>
+                  <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#A855F7] to-fuchsia-400" />
+                  <div className={`text-5xl sm:text-6xl font-black tracking-tight leading-none tabular-nums ${isLight ? "text-slate-900" : "text-white"}`}>
+                    100<span className="text-[#A855F7]">%</span>
+                  </div>
+                  <p className={`text-[11px] sm:text-xs font-extrabold uppercase tracking-widest mt-3 ${isLight ? "text-purple-600" : "text-[#C084FC]"}`}>
+                    OEM Certified
+                  </p>
+                  <p className={`text-[11px] leading-snug ${isLight ? "text-slate-400" : "text-slate-500"}`}>
+                    Genuine spares &amp; warranty
+                  </p>
+                </div>
+
+              </div>
+            </div>
           </ScrollReveal>
 
-          <div className="space-y-16 mt-14">
-            
-            {/* OUR JOURNEY & SHOWROOM SHOWCASE */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+          <div className="space-y-16 sm:space-y-20 mt-12 sm:mt-16">
+            {/* ====================================================================
+                2. DIVISION 01: GBG EV — COMMERCIAL FLEETS & ASSET MANAGEMENT
+                ==================================================================== */}
+            <div id="gbgev-section" className="scroll-mt-28 space-y-12">
               
-              {/* Left Column: Our Journey */}
-              <ScrollReveal variant="fade-right" delay={100} className="lg:col-span-6 space-y-6">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#EF6C1E]/15 border border-[#EF6C1E]/30 text-[#EF6C1E] shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
-                    <span>Our Journey</span>
+              {/* Division 01 Masthead Banner */}
+              <ScrollReveal variant="fade-up" delay={80} className={`p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 ${
+                isLight
+                  ? "bg-gradient-to-r from-orange-50/80 via-white to-amber-50/40 shadow-sm"
+                  : "bg-gradient-to-r from-[#17100B] via-[#0E131F] to-[#0B0F19] shadow-lg shadow-black/40"
+              }`}>
+                <div className="flex items-center gap-5 sm:gap-6">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border border-[#EF6C1E]/30 shadow-[0_6px_24px_rgba(239,108,30,0.15)] shrink-0 flex items-center justify-center p-3 group hover:border-[#EF6C1E] transition-all">
+                    <ExactGbgEvLogo className="h-12 sm:h-14 w-auto max-w-[85%] max-h-[85%] object-contain transition-transform duration-300 group-hover:scale-105" />
                   </div>
-                </div>
-                <h4 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-tight">
-                  Curated Electric Mobility & Certified Spare Parts
-                </h4>
-                <p className="text-slate-300 text-sm sm:text-base leading-relaxed text-justify">
-                  GBG X was founded to transform how India discovers, compares, and acquires premium electric two-wheelers.
-                </p>
-                <p className="text-slate-300 text-sm sm:text-base leading-relaxed text-justify">
-                  Every vehicle in our multi-brand inventory is handpicked, rigorously inspected, and supported by authentic OEM components, warranty backing, and fair on-road pricing.
-                </p>
-              </ScrollReveal>
-
-              {/* Right Column: GBGX Showroom Showcase Image */}
-              <ScrollReveal variant="fade-left" delay={150} className="lg:col-span-6 flex items-center justify-center">
-                <div className="relative w-full overflow-hidden rounded-3xl border border-white/15 shadow-[0_0_35px_rgba(239,108,30,0.15)] group">
-                  <GbgxShowroomImage className="w-full h-[300px] sm:h-[350px] md:h-[380px] object-cover transition-transform duration-700 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent pointer-events-none" />
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-white/95 font-medium">
-                    <span className="px-3.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/20 shadow-md">
-                      GBGX Experience Store
-                    </span>
-                    <span className="text-[#EF6C1E] font-bold tracking-wide">
-                      The New Era of Mobility
-                    </span>
-                  </div>
-                </div>
-              </ScrollReveal>
-
-            </div>
-
-            {/* 
-              ========================================================================
-              OUR JOURNEY: THE LEGACY OF GBGX (FAITHFUL TO PROVIDED DESIGN)
-              Positioned between Leader's Message (GBG EV) and Leader's Message (GBG X)
-              ========================================================================
-            */}
-            <GbgxJourneyTimeline />
-
-            {/* 
-              ========================================================================
-              LEADER'S MESSAGE: GBG X (BLACK BACKGROUND DESIGN INSPIRED BY REFERENCE)
-              ========================================================================
-            */}
-            <ScrollReveal variant="zoom-in" delay={100} className="my-8">
-              <div className="max-w-3xl mx-auto bg-black rounded-3xl border border-[#EF6C1E]/30 shadow-[0_0_40px_rgba(239,108,30,0.12)] p-8 sm:p-12 relative overflow-hidden">
-                <div className="absolute top-6 left-6 text-6xl font-serif text-[#EF6C1E]/20 select-none pointer-events-none">
-                  “
-                </div>
-
-                <div className="relative z-10 flex flex-col items-center text-center space-y-6">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#EF6C1E]/15 border border-[#EF6C1E]/35 text-[#EF6C1E]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
-                    <span>Leader's Message</span>
-                  </div>
-
-                  <p className="text-base sm:text-lg font-serif italic text-white leading-relaxed max-w-2xl">
-                    "GBG X, we don't just sell Scooters – we fulfil dreams. Every vehicle that leaves our showroom carries with it a promise: a promise of quality, transparency, and a relationship that lasts well beyond the purchase. Our journey has been incredible, but what excites me most is what lies ahead. Together, we're not just driving scooters; we're driving India's automotive future."
-                  </p>
-
-                  <div className="pt-2">
-                    <p className="text-sm font-bold text-white">Akash Ali</p>
-                    <p className="text-xs text-orange-400 font-bold uppercase tracking-wider mt-0.5">
-                      Founder & CEO, GBG X ( GoBabyGo Private Limited)
+                  <div className="flex flex-col justify-center">
+                    <h3 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none flex items-center gap-3">
+                      <span className={isLight ? "text-[#1D4ED8]" : "text-[#3B82F6]"}>
+                        GBG
+                      </span>
+                      <span className={isLight ? "text-[#EA580C]" : "text-[#FF7A1A]"}>
+                        EV
+                      </span>
+                    </h3>
+                    <p className={`text-sm sm:text-base lg:text-lg font-semibold mt-1.5 sm:mt-2 ${
+                      isLight ? "text-slate-600" : "text-slate-300"
+                    }`}>
+                      Fleet Electrification & Asset Logistics
                     </p>
                   </div>
                 </div>
-              </div>
-            </ScrollReveal>
 
-            {/* Purpose: Mission & Vision */}
-            <div className="space-y-8 pt-8 border-t border-white/10">
-              <ScrollReveal variant="fade-up" className="text-center max-w-2xl mx-auto space-y-3">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest bg-[#EF6C1E]/15 border border-[#EF6C1E]/40 text-[#EF6C1E] shadow-[0_0_15px_rgba(239,108,30,0.2)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
-                  <span>Who We Are</span>
+                {/* Division Action Button */}
+                <div className="shrink-0 w-full md:w-auto">
+                  <a
+                    href="https://gbgev.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#EF6C1E] to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md shadow-orange-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer w-full sm:w-auto"
+                  >
+                    <span>Visit gbgev.com</span>
+                    <ExternalLink size={15} />
+                  </a>
                 </div>
-                <h4 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                  Shaping the <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#EF6C1E] via-orange-400 to-[#2563EB]">Future of Mobility</span>
-                </h4>
-                <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">
-                  Empowering riders across India through verified EV intelligence, transparent pricing, and guaranteed manufacturer support.
-                </p>
               </ScrollReveal>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-                {/* Our Vision Card - GBG Orange Theme */}
-                <ScrollReveal variant="fade-right" delay={100}>
-                  <div className="group bg-white/[0.03] p-8 sm:p-10 rounded-3xl border border-white/10 hover:border-[#EF6C1E]/50 hover:shadow-[0_0_30px_rgba(239,108,30,0.15)] transition-all duration-300 h-full flex flex-col justify-between">
-                    <div>
-                      <div className="w-12 h-12 rounded-2xl bg-[#EF6C1E]/15 border border-[#EF6C1E]/30 text-[#EF6C1E] flex items-center justify-center font-bold mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                        <Sparkles size={24} />
+              {/* Division 01 Core Content Grid: Narrative & Highlights vs Vehicle Showcase */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12 items-center">
+                
+                {/* Left 7 Cols: Executive Overview & Operational Pillars */}
+                <ScrollReveal variant="fade-right" delay={100} className="lg:col-span-7 space-y-6">
+                  <div className="space-y-3">
+                    <h4 className={`text-xl sm:text-2xl font-bold tracking-tight ${
+                      isLight ? "text-slate-900" : "text-white"
+                    }`}>
+                      Powering India's High-Utilization Commercial Logistics
+                    </h4>
+                    <p className={`text-sm sm:text-base leading-relaxed ${
+                      isLight ? "text-slate-600" : "text-slate-300"
+                    }`}>
+                      Founded in <strong>2021</strong> as <strong>GoBabyGo Cabs (OPC) Private Limited</strong> and broadened into <strong>GoBabyGo Cabs Private Limited</strong> in 2023, GBG EV bridges institutional asset capital with commercial last-mile delivery demand. By connecting investors directly with revenue-generating EV fleets, delivery riders secure dependable, fuel-free vehicles, e-commerce giants reduce operational overhead, and investors receive predictable monthly payouts.
+                    </p>
+                  </div>
+
+                  {/* 3 Strategic Operational Pillars */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                    <div className={`p-4 rounded-2xl border transition-all ${
+                      isLight ? "bg-white border-slate-200 shadow-sm" : "bg-white/[0.03] border-white/10"
+                    }`}>
+                      <div className="w-10 h-10 rounded-xl bg-[#EF6C1E]/15 text-[#EF6C1E] flex items-center justify-center mb-3">
+                        <BatteryCharging size={20} />
                       </div>
-                      <h5 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-                        Our Vision
-                        <span className="w-2 h-2 rounded-full bg-[#EF6C1E]" />
+                      <h5 className={`text-sm font-bold leading-snug mb-1 ${isLight ? "text-slate-900" : "text-white"}`}>
+                        90-Sec Battery Swap
                       </h5>
-                      <p className="text-slate-300 text-sm sm:text-base leading-relaxed mt-3">
-                        To become India’s most trusted automotive retail platform — where every rider finds their ideal electric vehicle through verified data, transparent pricing, and quality assurance.
+                      <p className={`text-xs leading-relaxed ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+                        75+ charging and swapping hubs minimize turnaround for non-stop delivery uptime.
+                      </p>
+                    </div>
+
+                    <div className={`p-4 rounded-2xl border transition-all ${
+                      isLight ? "bg-white border-slate-200 shadow-sm" : "bg-white/[0.03] border-white/10"
+                    }`}>
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center mb-3">
+                        <TrendingUp size={20} />
+                      </div>
+                      <h5 className={`text-sm font-bold leading-snug mb-1 ${isLight ? "text-slate-900" : "text-white"}`}>
+                        Fixed Asset Yields
+                      </h5>
+                      <p className={`text-xs leading-relaxed ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+                        Contract-backed commercial vehicle leases ensuring steady monthly returns for 300+ investors.
+                      </p>
+                    </div>
+
+                    <div className={`p-4 rounded-2xl border transition-all ${
+                      isLight ? "bg-white border-slate-200 shadow-sm" : "bg-white/[0.03] border-white/10"
+                    }`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
+                        isLight ? "bg-orange-100 text-[#EA580C]" : "bg-[#EF6C1E]/15 text-[#EF6C1E]"
+                      }`}>
+                        <ShieldCheck size={20} />
+                      </div>
+                      <h5 className={`text-sm font-bold leading-snug mb-1 ${isLight ? "text-slate-900" : "text-white"}`}>
+                        Real-Time IoT Telematics
+                      </h5>
+                      <p className={`text-xs leading-relaxed ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+                        Continuous GPS tracking, remote diagnostics, and battery health analytics across all vehicles.
                       </p>
                     </div>
                   </div>
                 </ScrollReveal>
 
-                {/* Our Mission Card - Royal Blue Theme */}
-                <ScrollReveal variant="fade-left" delay={150}>
-                  <div className="group bg-white/[0.03] p-8 sm:p-10 rounded-3xl border border-white/10 hover:border-[#2563EB]/50 hover:shadow-[0_0_30px_rgba(37,99,235,0.15)] transition-all duration-300 h-full flex flex-col justify-between">
-                    <div>
-                      <div className="w-12 h-12 rounded-2xl bg-[#2563EB]/15 border border-[#2563EB]/30 text-[#2563EB] flex items-center justify-center font-bold mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                        <Target size={24} />
+                {/* Right 5 Cols: Commercial Vehicle Presentation Card */}
+                <ScrollReveal variant="fade-left" delay={150} className="lg:col-span-5 flex flex-col items-center">
+                  <div className={`relative w-full rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center overflow-hidden group ${
+                    isLight
+                      ? "bg-gradient-to-b from-orange-50/50 via-white to-slate-50 shadow-xl"
+                      : "bg-gradient-to-b from-[#18110B] via-[#0E131F] to-[#0A0D15] shadow-2xl shadow-black/60"
+                  }`}>
+
+                    <div className="relative w-full max-w-[380px] my-6 flex items-center justify-center">
+                      <GbgEvScooterImage className="w-full h-auto object-contain drop-shadow-[0_20px_30px_rgba(239,108,30,0.25)] transition-transform duration-500 group-hover:scale-105" />
+                    </div>
+
+                    {/* Vehicle Performance Specifications Ribbon */}
+                    <div className={`w-full grid grid-cols-3 gap-2 pt-4 border-t text-center ${
+                      isLight ? "border-slate-200" : "border-white/10"
+                    }`}>
+                      <div>
+                        <div className="text-xs sm:text-sm font-black text-[#EF6C1E]">120+ KM</div>
+                        <div className={`text-[10px] uppercase font-medium ${isLight ? "text-slate-500" : "text-slate-400"}`}>Range / Charge</div>
                       </div>
-                      <h5 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-                        Our Mission
-                        <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
-                      </h5>
-                      <p className="text-slate-300 text-sm sm:text-base leading-relaxed mt-3">
-                        To democratize sustainable EV ownership by offering wide multi-brand selection, honest on-road costs, and genuine replacement spare parts under one roof.
-                      </p>
+                      <div className={`border-x ${isLight ? "border-slate-200" : "border-white/10"}`}>
+                        <div className="text-xs sm:text-sm font-black text-amber-500">&lt; 90 Sec</div>
+                        <div className={`text-[10px] uppercase font-medium ${isLight ? "text-slate-500" : "text-slate-400"}`}>Swap Turnaround</div>
+                      </div>
+                      <div>
+                        <div className="text-xs sm:text-sm font-black text-emerald-500">99.4%</div>
+                        <div className={`text-[10px] uppercase font-medium ${isLight ? "text-slate-500" : "text-slate-400"}`}>Fleet Uptime</div>
+                      </div>
                     </div>
                   </div>
                 </ScrollReveal>
+
               </div>
             </div>
 
-            {/* Brand Partners */}
-            <div className="space-y-8 pt-6 border-t border-white/10">
-              <ScrollReveal variant="fade-up" className="text-center max-w-2xl mx-auto space-y-2">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#2563EB]/15 border border-[#2563EB]/30 text-[#2563EB]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-pulse" />
-                  <span>Brand Network</span>
+            {/* Architectural Division Separation Bar */}
+            <div className="relative py-4 flex items-center justify-center">
+              <div className={`w-full border-t ${isLight ? "border-slate-200" : "border-white/10"}`} />
+              <div className={`absolute px-4 py-1 rounded-full text-[10px] font-mono uppercase tracking-widest border font-bold shadow-sm ${
+                isLight ? "bg-slate-100 border-slate-200 text-slate-500" : "bg-slate-900 border-white/15 text-slate-400"
+              }`}>
+                Enterprise Mobility Portfolio
+              </div>
+            </div>
+
+            {/* ====================================================================
+                3. DIVISION 02: GBG X — MULTI-BRAND EV RETAIL & EXPERIENCE STORES
+                ==================================================================== */}
+            <div id="gbgx-section" className="scroll-mt-28 space-y-12">
+              
+              {/* Division 02 Masthead Banner */}
+              <ScrollReveal variant="fade-up" delay={80} className={`p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border ${
+                isLight
+                  ? "bg-gradient-to-r from-purple-50/90 via-white to-fuchsia-50/40 border-purple-100 shadow-sm"
+                  : "bg-gradient-to-r from-[#120721] via-[#160B28] to-[#0D0817] border-purple-500/20 shadow-lg shadow-black/40"
+              }`}>
+                <div className="flex items-center gap-5 sm:gap-6">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-slate-950 border border-[#A855F7]/40 shadow-[0_0_25px_rgba(168,85,247,0.28)] shrink-0 flex items-center justify-center p-3 group hover:border-[#A855F7] transition-all">
+                    <ExactGbgxLogo className="h-7 sm:h-8 w-auto max-w-[85%] max-h-[85%] object-contain transition-transform duration-300 group-hover:scale-105" />
+                  </div>
+                  <div className="flex flex-col justify-center">
+                    <h3 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none flex items-center gap-3">
+                      <span className={isLight ? "text-[#6B21A8]" : "text-[#D8B4FE]"}>
+                        GBG
+                      </span>
+                      <span className={isLight ? "text-[#A855F7]" : "text-[#B026FF] drop-shadow-[0_0_14px_rgba(176,38,255,0.7)]"}>
+                        X
+                      </span>
+                    </h3>
+                    <p className={`text-sm sm:text-base lg:text-lg font-semibold mt-1.5 sm:mt-2 ${
+                      isLight ? "text-slate-600" : "text-slate-300"
+                    }`}>
+                      Multi-Brand EV Experience & Retail Platform
+                    </p>
+                  </div>
                 </div>
-                <h4 className="text-3xl font-extrabold text-white">Trusted Brand Partners</h4>
-                <p className="text-xs sm:text-sm text-slate-400">
-                  Partnering with leading manufacturers across India for certified scooters and spares.
-                </p>
+
+                {/* Division Action Button */}
+                <div className="shrink-0 w-full md:w-auto">
+                  <a
+                    href="https://gbgx.in/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#9333EA] via-[#A855F7] to-[#B026FF] hover:from-[#7E22CE] hover:to-[#9333EA] shadow-md shadow-purple-500/35 hover:shadow-purple-500/55 transition-all hover:scale-105 active:scale-95 cursor-pointer w-full sm:w-auto"
+                  >
+                    <span>Visit gbgx.in</span>
+                    <ExternalLink size={15} />
+                  </a>
+                </div>
               </ScrollReveal>
 
-              <ScrollReveal variant="fade-up" delay={100} className="pt-2">
-                <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-                  {["E-Sprinto", "GBG EV", "YoBykes", "Goeen", "Bgauss", "Zelio", "Gravton"].map((brand) => (
-                    <span
-                      key={brand}
-                      className="px-6 py-2.5 rounded-full bg-white/[0.04] border border-white/15 text-xs sm:text-sm font-bold text-white tracking-wider hover:border-[#EF6C1E] hover:text-[#EF6C1E] transition-all cursor-default shadow-sm"
-                    >
-                      {brand}
-                    </span>
-                  ))}
+              {/* Division 02 Core Content Grid: Narrative & Highlights vs Showroom Showcase */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12 items-center">
+                
+                {/* Left 7 Cols: Executive Overview & Retail Pillars */}
+                <ScrollReveal variant="fade-right" delay={100} className="lg:col-span-7 space-y-6">
+                  <div className="space-y-3">
+                    <h4 className={`text-xl sm:text-2xl font-bold tracking-tight ${
+                      isLight ? "text-slate-900" : "text-white"
+                    }`}>
+                      Curating India's Premier Electric Two-Wheeler Experience
+                    </h4>
+                    <p className={`text-sm sm:text-base leading-relaxed ${
+                      isLight ? "text-slate-600" : "text-slate-300"
+                    }`}>
+                      GBG X was established to transform how riders discover, evaluate, and acquire electric two-wheelers. By convening India’s foremost EV manufacturers under a unified retail umbrella, we replace single-brand bias with certified comparative insights, transparent on-road pricing, low-interest financing, and factory-authorized warranty protection.
+                    </p>
+                  </div>
+
+                  {/* 3 Strategic Retail Pillars (Theme: Neon Purple & Orange) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                    <div className={`p-5 rounded-2xl border transition-all duration-300 hover:-translate-y-1 ${
+                      isLight
+                        ? "bg-white border-purple-200/80 shadow-sm hover:border-[#A855F7] hover:shadow-md"
+                        : "bg-[#0D0917] border-white/10 hover:border-[#A855F7]/50 shadow-lg"
+                    }`}>
+                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-3.5 shadow-sm ${
+                        isLight
+                          ? "bg-purple-50 text-[#7E22CE] border border-purple-200/80"
+                          : "bg-[#A855F7]/15 text-[#C084FC] border border-[#A855F7]/30"
+                      }`}>
+                        <Store size={20} />
+                      </div>
+                      <h5 className={`text-sm sm:text-base font-bold leading-snug mb-1.5 ${
+                        isLight ? "text-slate-900" : "text-white"
+                      }`}>
+                        Multi-Brand Catalog
+                      </h5>
+                      <p className={`text-xs leading-relaxed ${isLight ? "text-slate-600" : "text-slate-400"}`}>
+                        Handpicked, rigorously evaluated electric scooters and motorcycles across premier OEM brands.
+                      </p>
+                    </div>
+
+                    <div className={`p-5 rounded-2xl border transition-all duration-300 hover:-translate-y-1 ${
+                      isLight
+                        ? "bg-white border-orange-200/80 shadow-sm hover:border-[#EF6C1E] hover:shadow-md"
+                        : "bg-[#0D0917] border-white/10 hover:border-[#EF6C1E]/50 shadow-lg"
+                    }`}>
+                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-3.5 shadow-sm ${
+                        isLight
+                          ? "bg-orange-100 text-[#EA580C] border border-orange-200/80"
+                          : "bg-[#EF6C1E]/15 text-[#EF6C1E] border border-[#EF6C1E]/30"
+                      }`}>
+                        <Award size={20} />
+                      </div>
+                      <h5 className={`text-sm sm:text-base font-bold leading-snug mb-1.5 ${
+                        isLight ? "text-slate-900" : "text-white"
+                      }`}>
+                        Transparent Pricing
+                      </h5>
+                      <p className={`text-xs leading-relaxed ${isLight ? "text-slate-600" : "text-slate-400"}`}>
+                        Zero hidden markups with seamless state and central subsidy processing and low-EMI loans.
+                      </p>
+                    </div>
+
+                    <div className={`p-5 rounded-2xl border transition-all duration-300 hover:-translate-y-1 ${
+                      isLight
+                        ? "bg-white border-purple-200/80 shadow-sm hover:border-[#A855F7] hover:shadow-md"
+                        : "bg-[#0D0917] border-white/10 hover:border-[#A855F7]/50 shadow-lg"
+                    }`}>
+                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-3.5 shadow-sm ${
+                        isLight
+                          ? "bg-purple-50 text-[#7E22CE] border border-purple-200/80"
+                          : "bg-[#A855F7]/15 text-[#C084FC] border border-[#A855F7]/30"
+                      }`}>
+                        <Wrench size={20} />
+                      </div>
+                      <h5 className={`text-sm sm:text-base font-bold leading-snug mb-1.5 ${
+                        isLight ? "text-slate-900" : "text-white"
+                      }`}>
+                        Genuine Spares & Care
+                      </h5>
+                      <p className={`text-xs leading-relaxed ${isLight ? "text-slate-600" : "text-slate-400"}`}>
+                        100% genuine factory components and certified technicians maintaining manufacturer warranty.
+                      </p>
+                    </div>
+                  </div>
+                </ScrollReveal>
+
+                {/* Right 5 Cols: Showroom Experience Showcase */}
+                <ScrollReveal variant="fade-left" delay={150} className="lg:col-span-5 flex flex-col items-center">
+                  <div className={`relative w-full rounded-3xl overflow-hidden border shadow-xl group ${
+                    isLight ? "border-slate-200 shadow-slate-200/60" : "border-white/15 shadow-[0_0_35px_rgba(168,85,247,0.22)]"
+                  }`}>
+                    <GbgxShowroomImage className="w-full h-[260px] sm:h-[320px] md:h-[340px] object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
+                    
+                    <div className="absolute top-4 left-4">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-[#A855F7] text-white shadow-sm shadow-purple-500/40">
+                        Flagship Retail Experience
+                      </span>
+                    </div>
+
+                    <div className="absolute bottom-4 left-4 right-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-white font-medium">
+                      <span className="px-3.5 py-1.5 rounded-xl bg-black/70 backdrop-blur-md border border-white/20 shadow-md">
+                        GBGX Experience Hub • Assam Flagship
+                      </span>
+                      <span className="text-orange-400 font-bold tracking-wide">
+                        Verified Multi-Brand Center
+                      </span>
+                    </div>
+                  </div>
+                </ScrollReveal>
+
+              </div>
+
+
+            </div>
+
+            {/* ====================================================================
+                4. UNIFIED ENTERPRISE STRATEGIC INTENT (SINGLE GROUP MISSION & VISION)
+                NO DUPLICATES — CORPORATE GOVERNANCE STANDARD
+                ==================================================================== */}
+            <div className={`pt-12 sm:pt-14 border-t ${isLight ? "border-slate-200" : "border-white/10"} space-y-8 sm:space-y-10`}>
+              <ScrollReveal variant="fade-up" className="max-w-5xl mx-auto space-y-8 sm:space-y-10 antialiased">
+                <div className="text-center space-y-3">
+                  <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border shadow-sm ${
+                    isLight
+                      ? "bg-slate-100 border-slate-300 text-slate-800"
+                      : "bg-white/10 border-white/15 text-slate-200"
+                  }`}>
+                    <Sparkles size={15} className="text-[#EF6C1E]" />
+                    <span>Corporate Strategic Intent • Group Governance</span>
+                  </div>
+                  <h3 className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight ${
+                    isLight ? "text-slate-900" : "text-white"
+                  }`}>
+                    Guiding Principles Driving National Scale
+                  </h3>
+                  <p className={`text-sm sm:text-base max-w-2xl mx-auto leading-relaxed font-normal ${
+                    isLight ? "text-slate-600" : "text-slate-300"
+                  }`}>
+                    A unified strategic compass ensuring long-term shareholder value, operational excellence, and measurable environmental impact.
+                  </p>
+                </div>
+
+                {/* Symmetrical Dual Strategic Intent Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                  
+                  {/* GROUP MISSION CARD */}
+                  <div className={`group relative overflow-hidden rounded-3xl border transition-all duration-500 hover:-translate-y-1 p-8 sm:p-10 flex flex-col justify-between ${
+                    isLight
+                      ? "bg-white border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-orange-500/15 hover:border-orange-300"
+                      : "bg-slate-900/90 border-white/10 shadow-[0_4px_40px_rgba(0,0,0,0.4)] hover:border-[#EF6C1E]/40 hover:shadow-[0_8px_48px_rgba(239,108,30,0.18)]"
+                  }`}>
+                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#EF6C1E] to-amber-400" />
+                    
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div className="w-14 h-14 rounded-2xl bg-[#EF6C1E]/15 text-[#EF6C1E] flex items-center justify-center shadow-md">
+                          <Target size={28} strokeWidth={2} />
+                        </div>
+                        <span className="px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase bg-[#EF6C1E]/10 text-orange-600 dark:text-orange-400 border border-[#EF6C1E]/30">
+                          ENTERPRISE MISSION
+                        </span>
+                      </div>
+
+                      <div className="space-y-3">
+                        <h4 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${
+                          isLight ? "text-slate-900" : "text-white"
+                        }`}>
+                          Democratizing Green Fleet & Mobility Wealth
+                        </h4>
+                        <p className={`text-sm sm:text-base leading-relaxed ${
+                          isLight ? "text-slate-700" : "text-slate-300"
+                        }`}>
+                          To accelerate India's transition to sustainable, zero-emission transportation by deploying high-uptime commercial EV fleets that create predictable investor wealth, while empowering everyday consumers with an uncompromisingly transparent EV retail journey.
+                        </p>
+                      </div>
+
+                      {/* Strategic Commitments Checklist */}
+                      <div className={`pt-5 border-t space-y-3 text-sm font-semibold ${
+                        isLight ? "border-slate-100 text-slate-800" : "border-white/10 text-slate-200"
+                      }`}>
+                        <div className="flex items-center gap-3">
+                          <CheckCircle size={17} className="text-[#EF6C1E] shrink-0" />
+                          <span>Guaranteed asset-backed returns for 300+ fleet investors</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <CheckCircle size={17} className="text-[#EF6C1E] shrink-0" />
+                          <span>Turnkey high-uptime electric delivery scooters for gig riders</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <CheckCircle size={17} className="text-[#EF6C1E] shrink-0" />
+                          <span>Rapid expansion across metro and tier-2 logistics corridors</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* GROUP VISION CARD */}
+                  <div className={`group relative overflow-hidden rounded-3xl border transition-all duration-500 hover:-translate-y-1 p-8 sm:p-10 flex flex-col justify-between ${
+                    isLight
+                      ? "bg-white border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-blue-500/15 hover:border-blue-300"
+                      : "bg-slate-900/90 border-white/10 shadow-[0_4px_40px_rgba(0,0,0,0.4)] hover:border-[#2563EB]/40 hover:shadow-[0_8px_48px_rgba(37,99,235,0.18)]"
+                  }`}>
+                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#2563EB] to-cyan-400" />
+                    
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div className="w-14 h-14 rounded-2xl bg-[#2563EB]/15 text-[#2563EB] flex items-center justify-center shadow-md">
+                          <Lightbulb size={28} strokeWidth={2} />
+                        </div>
+                        <span className="px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase bg-[#2563EB]/10 text-blue-600 dark:text-blue-400 border border-[#2563EB]/30">
+                          ENTERPRISE VISION
+                        </span>
+                      </div>
+
+                      <div className="space-y-3">
+                        <h4 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${
+                          isLight ? "text-slate-900" : "text-white"
+                        }`}>
+                          Pioneering India's Electric Transit Conglomerate
+                        </h4>
+                        <p className={`text-sm sm:text-base leading-relaxed ${
+                          isLight ? "text-slate-700" : "text-slate-300"
+                        }`}>
+                          To establish GoBabyGo as the benchmark multinational mobility group in clean transportation — seamlessly uniting high-density commercial last-mile logistics, extensive battery swapping networks, and multi-brand consumer retail showrooms under an unyielding standard of integrity.
+                        </p>
+                      </div>
+
+                      {/* Strategic Commitments Checklist */}
+                      <div className={`pt-5 border-t space-y-3 text-sm font-semibold ${
+                        isLight ? "border-slate-100 text-slate-800" : "border-white/10 text-slate-200"
+                      }`}>
+                        <div className="flex items-center gap-3">
+                          <CheckCircle size={17} className="text-[#2563EB] shrink-0" />
+                          <span>100% zero-tailpipe emission transit across all verticals</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <CheckCircle size={17} className="text-[#2563EB] shrink-0" />
+                          <span>Pan-India network of 200+ battery swapping & experience hubs</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <CheckCircle size={17} className="text-[#2563EB] shrink-0" />
+                          <span>Highest customer satisfaction & OEM component authenticity</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </ScrollReveal>
+
+              {/* ====================================================================
+                  5. EXECUTIVE LEADERSHIP STATEMENT (MNC BOARD STANDARD)
+                  ==================================================================== */}
+              <ScrollReveal variant="fade-up" delay={80}>
+                <div className={`max-w-4xl mx-auto rounded-3xl border shadow-2xl p-8 sm:p-12 lg:p-14 relative overflow-hidden transition-all duration-300 ${
+                  isLight
+                    ? "bg-gradient-to-br from-white via-slate-50/80 to-orange-50/30 border-slate-200/90 shadow-slate-200/60"
+                    : "bg-gradient-to-br from-[#0B0F19] via-[#080C14] to-[#120F16] border-white/10 shadow-black/80 backdrop-blur-xl"
+                }`}>
+                  {/* Modern Brand Accent Bar */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#EF6C1E] via-amber-400 to-[#2563EB]" />
+
+                  {/* Subtle Ambient Radial Glow */}
+                  <div className="absolute top-0 right-0 w-80 h-80 bg-[#EF6C1E]/5 rounded-full blur-3xl pointer-events-none" />
+
+                  <div className="relative z-10 flex flex-col items-center text-center space-y-6">
+                    {/* Executive Eyebrow */}
+                    <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border shadow-sm ${
+                      isLight
+                        ? "bg-orange-50 border-orange-200 text-[#EF6C1E]"
+                        : "bg-[#EF6C1E]/15 border-[#EF6C1E]/30 text-[#EF6C1E]"
+                    }`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#EF6C1E] animate-pulse" />
+                      <span>Executive Leadership Statement</span>
+                    </div>
+
+                    {/* Modern Sans-Serif High-Contrast Quote */}
+                    <blockquote className={`text-base sm:text-lg lg:text-xl font-normal leading-relaxed max-w-3xl ${
+                      isLight ? "text-slate-800" : "text-slate-200"
+                    }`}>
+                      “At GoBabyGo, whether powering high-uptime commercial delivery fleets through <span className="font-semibold text-[#EF6C1E]">GBG EV</span> or fulfilling personal clean mobility dreams through <span className="font-semibold text-[#2563EB]">GBG X</span>, our commitment is absolute: uncompromising vehicle reliability, transparent unit economics, and driving India's zero-emission transit future forward together.”
+                    </blockquote>
+
+                    {/* Leader Signoff Box */}
+                    <div className="pt-4 flex flex-col items-center space-y-2">
+                      <span className={`text-lg sm:text-xl font-bold tracking-tight ${isLight ? "text-slate-900" : "text-white"}`}>
+                        Akash Ali
+                      </span>
+
+                      <p className="text-xs sm:text-sm font-semibold text-[#EF6C1E] tracking-wide uppercase">
+                        Founder & Chief Executive Officer
+                      </p>
+
+                      <p className={`text-xs font-medium ${isLight ? "text-slate-500" : "text-slate-400"}`}>
+                        GoBabyGo Cabs (OPC) Private Limited • Corporate Headquarters, Sector 62, Noida
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </ScrollReveal>
             </div>
@@ -2377,7 +2985,140 @@ function MainApp({ onReplayIntro }) {
 
       {/* 
         ========================================================================
-        4. FREQUENTLY ASKED QUESTIONS (FAQ) SECTION (HOVER REVEAL & ACCORDION)
+        4. OUR TEAM & EXECUTIVE LEADERSHIP SECTION
+        ========================================================================
+      */}
+      <section
+        id="team"
+        className={`py-20 sm:py-28 px-4 sm:px-8 lg:px-16 max-w-7xl mx-auto border-t transition-colors scroll-mt-24 ${
+          isLight ? "border-slate-200" : "border-slate-800/80"
+        }`}
+      >
+        <ScrollReveal variant="fade-up" className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+          <div
+            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border ${
+              isLight
+                ? "text-orange-600 bg-orange-100 border-orange-200"
+                : "text-orange-400 bg-orange-950/40 border-orange-800/40"
+            }`}
+          >
+            <Users size={14} />
+            <span>Leadership & Culture</span>
+          </div>
+          <h2
+            className={`text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight ${
+              isLight ? "text-slate-900" : "text-white"
+            }`}
+          >
+            OUR LEADERSHIP <span className="text-[#EF6C1E]">TEAM</span>
+          </h2>
+          <p
+            className={`text-sm sm:text-base leading-relaxed ${
+              isLight ? "text-slate-600" : "text-slate-400"
+            }`}
+          >
+            Visionary leaders and collaborative minds building extraordinary clean mobility and retail experiences across India.
+          </p>
+        </ScrollReveal>
+
+        {/* 3 Core Value Pillars */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-20">
+          {TEAM_PILLARS.map((pillar, index) => {
+            const icons = [
+              <Sparkles size={22} className="text-[#EF6C1E]" />,
+              <Zap size={22} className="text-[#2563EB]" />,
+              <Users size={22} className="text-[#EF6C1E]" />
+            ];
+            return (
+              <ScrollReveal key={pillar.number} variant="fade-up" delay={index * 80}>
+                <div
+                  className={`group relative rounded-3xl p-7 sm:p-8 border transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl h-full flex flex-col justify-between overflow-hidden ${
+                    isLight
+                      ? "bg-white border-slate-200/90 shadow-md shadow-slate-200/50 hover:border-orange-500/50 hover:shadow-orange-500/10"
+                      : "bg-[#0E1422] border-white/10 shadow-xl shadow-black/40 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(239,108,30,0.15)]"
+                  }`}
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
+                  <div>
+                    <div className="flex items-center justify-between mb-5">
+                      <span className="text-3xl sm:text-4xl font-mono font-black text-[#EF6C1E]">
+                        {pillar.number}
+                      </span>
+                      <div
+                        className={`p-2.5 rounded-2xl border ${
+                          isLight
+                            ? "bg-orange-50 border-orange-200/80"
+                            : "bg-white/5 border-white/10"
+                        }`}
+                      >
+                        {icons[index]}
+                      </div>
+                    </div>
+                    <h3
+                      className={`text-lg sm:text-xl font-extrabold uppercase tracking-wider mb-2.5 ${
+                        isLight ? "text-slate-900" : "text-white"
+                      }`}
+                    >
+                      {pillar.title}
+                    </h3>
+                    <p
+                      className={`text-sm sm:text-base leading-relaxed ${
+                        isLight ? "text-slate-600" : "text-slate-300"
+                      }`}
+                    >
+                      {pillar.description}
+                    </p>
+                  </div>
+                </div>
+              </ScrollReveal>
+            );
+          })}
+        </div>
+
+        {/* Leadership Team Showcase - Circular Headshots & Editorial Typography */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 lg:gap-14 max-w-5xl mx-auto">
+          {TEAM_MEMBERS.map((member, index) => (
+            <ScrollReveal key={member.name} variant="fade-up" delay={150 + index * 100}>
+              <div className="group flex flex-col items-center text-center">
+                {/* Circular Portrait with Soft Studio Shadow & Frame */}
+                <div className="relative w-44 h-44 sm:w-48 sm:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden shadow-xl ring-4 ring-slate-200/80 dark:ring-slate-800/80 transition-all duration-500 group-hover:scale-105 group-hover:shadow-2xl group-hover:ring-[#EF6C1E]/50 bg-slate-200 dark:bg-slate-800">
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="w-full h-full object-cover object-center filter grayscale-[25%] group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/team/akash_ali.png";
+                    }}
+                  />
+                </div>
+
+                {/* Name: Elegant Italic Serif */}
+                <h3
+                  className={`font-serif italic text-2xl sm:text-[26px] lg:text-[28px] font-normal tracking-normal mt-7 mb-2 transition-colors duration-300 ${
+                    isLight ? "text-slate-900 group-hover:text-[#EF6C1E]" : "text-white group-hover:text-[#EF6C1E]"
+                  }`}
+                >
+                  {member.name}
+                </h3>
+
+                {/* Title: All-Caps High-Authority Sans-Serif in Refined Deep Navy / Blue */}
+                <p
+                  className={`text-xs sm:text-[13px] font-bold tracking-[0.16em] uppercase transition-colors duration-300 ${
+                    isLight ? "text-[#173753]" : "text-blue-400 group-hover:text-orange-400"
+                  }`}
+                >
+                  {member.role}
+                </p>
+              </div>
+            </ScrollReveal>
+          ))}
+        </div>
+      </section>
+
+      {/* 
+        ========================================================================
+        5. FREQUENTLY ASKED QUESTIONS (FAQ) SECTION (HOVER REVEAL & ACCORDION)
         ========================================================================
       */}
       <section id="faq" className={`py-20 px-6 sm:px-10 lg:px-16 max-w-5xl mx-auto border-t transition-colors ${
@@ -2477,7 +3218,7 @@ function MainApp({ onReplayIntro }) {
         5. BRAND PARTNERS BANNER & DYNAMIC MARQUEE ECOSYSTEM
         ========================================================================
       */}
-      <section className={`py-16 sm:py-20 px-4 sm:px-8 lg:px-12 border-t overflow-hidden relative transition-colors ${
+      <section id="network" className={`scroll-mt-20 py-20 sm:py-24 px-4 sm:px-8 lg:px-12 border-t overflow-hidden relative transition-colors ${
         isLight ? "border-slate-200 bg-[#F8FAFC]" : "border-slate-800/60 bg-[#090D14]"
       }`}>
         <style>{`
@@ -2669,29 +3410,17 @@ function MainApp({ onReplayIntro }) {
             <div className="overflow-hidden">
                 <div className="gbg-marquee-row-2 gap-4 sm:gap-6 py-1">
                   {[...Array(2)].flatMap((_, repIdx) => [
-                    // ZELIO (Yellow circle with black lightning bolt Z + ZELIO® + FUTURE IS ELECTRIC)
+                    // ZELIO (Real Official Logo: Yellow circle with lightning bolt + ZELIO + FUTURE IS ELECTRIC)
                     <div key={`zelio-${repIdx}`} className={`flex-shrink-0 w-40 sm:w-48 h-20 sm:h-22 rounded-2xl border transition-all duration-300 flex items-center justify-center p-3 select-none hover:shadow-lg hover:border-orange-500/50 hover:-translate-y-1 ${
                       isLight ? "bg-white border-slate-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)]" : "bg-[#0B1019] border-slate-800/80 shadow-md"
                     }`}>
-                      <div className="flex items-center justify-center gap-2 bg-white px-3.5 py-1.5 rounded-lg shadow-sm">
-                        <svg viewBox="0 0 44 44" className="w-7 sm:w-8 h-7 sm:h-8 shrink-0">
-                          {/* Yellow Circle */}
-                          <circle cx="22" cy="22" r="16" fill="#FACC15" />
-                          {/* Black Sharp Z Lightning Bolt piercing the circle */}
-                          <path
-                            d="M12 13 L31 13 L21 23 L29 23 L13 35 L17 25 L11 25 Z"
-                            fill="#000000"
-                          />
-                        </svg>
-                        <div className="flex flex-col text-left leading-none">
-                          <div className="flex items-baseline font-black tracking-wide text-black text-sm sm:text-base font-sans">
-                            <span>ZELIO</span>
-                            <span className="text-[8px] font-bold ml-0.5">®</span>
-                          </div>
-                          <span className="text-[6.5px] sm:text-[7px] font-bold tracking-[0.18em] text-black uppercase font-sans mt-0.5">
-                            FUTURE IS ELECTRIC
-                          </span>
-                        </div>
+                      <div className="flex items-center justify-center bg-white px-3.5 py-1.5 rounded-lg shadow-sm">
+                        <img
+                          src={zelioLogoImg}
+                          alt="Zelio Official Logo - Future is Electric"
+                          className="h-7 sm:h-8 w-auto max-w-[125px] sm:max-w-[140px] object-contain"
+                          loading="lazy"
+                        />
                       </div>
                     </div>,
 
@@ -2715,80 +3444,59 @@ function MainApp({ onReplayIntro }) {
                       </div>
                     </div>,
 
-                    // GOEEN (Thick Ring with 10 o'clock Square Notch + Bold Geometric GOEEN)
+                    // GOEEN (Real Official Logo: Ring with square notch + GOEEN italic bold)
                     <div key={`goeen-${repIdx}`} className={`flex-shrink-0 w-40 sm:w-48 h-20 sm:h-22 rounded-2xl border transition-all duration-300 flex items-center justify-center p-3 select-none hover:shadow-lg hover:border-orange-500/50 hover:-translate-y-1 ${
                       isLight ? "bg-white border-slate-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)]" : "bg-[#0B1019] border-slate-800/80 shadow-md"
                     }`}>
-                      <div className="flex items-center justify-center gap-2 sm:gap-2.5">
-                        <svg viewBox="0 0 40 40" className="w-6 sm:w-7 h-6 sm:h-7 shrink-0">
-                          {/* Circle ring */}
-                          <circle cx="21" cy="22" r="13" fill="none" stroke={isLight ? "#0F172A" : "#FFFFFF"} strokeWidth="5.5" />
-                          {/* Square notch at 10 o'clock */}
-                          <rect x="7" y="8" width="6.5" height="6.5" rx="1.5" fill={isLight ? "#0F172A" : "#FFFFFF"} />
-                        </svg>
-                        <span className={`text-base sm:text-lg font-black tracking-widest uppercase italic font-sans ${
-                          isLight ? "text-slate-900" : "text-white"
-                        }`}>
-                          GOEEN
-                        </span>
+                      <div className="flex items-center justify-center bg-white px-3.5 py-1.5 rounded-lg shadow-sm">
+                        <img
+                          src={goeenDarkImg}
+                          alt="GOEEN Motors Official Logo"
+                          className="h-6 sm:h-7 w-auto max-w-[120px] sm:max-w-[135px] object-contain"
+                          loading="lazy"
+                        />
                       </div>
                     </div>,
 
-                    // BGAUSS (Shield with BG + BGAUSS Wordmark)
+                    // BGAUSS (Real Official Logo: Shield with BG + BGAUSS Wordmark)
                     <div key={`bgauss-${repIdx}`} className={`flex-shrink-0 w-40 sm:w-48 h-20 sm:h-22 rounded-2xl border transition-all duration-300 flex items-center justify-center p-3 select-none hover:shadow-lg hover:border-orange-500/50 hover:-translate-y-1 ${
                       isLight ? "bg-white border-slate-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)]" : "bg-[#0B1019] border-slate-800/80 shadow-md"
                     }`}>
-                      <div className="flex items-center justify-center gap-2 bg-white px-3.5 py-1.5 rounded-lg shadow-sm">
-                        <div className="relative flex items-center justify-center px-1.5 py-0.5 border-[2px] border-black rounded-t-sm rounded-b-md">
-                          <span className="text-[11px] sm:text-xs font-black tracking-wider text-black font-sans leading-none">
-                            BG
-                          </span>
-                        </div>
-                        <span className="text-sm sm:text-base font-black tracking-wider text-black font-sans uppercase">
-                          BGAUSS
-                        </span>
+                      <div className="flex items-center justify-center bg-white px-3.5 py-1.5 rounded-lg shadow-sm">
+                        <img
+                          src={bgaussLogoImg}
+                          alt="BGAUSS Electric Mobility Official Logo"
+                          className="h-7 sm:h-8 w-auto max-w-[125px] sm:max-w-[140px] object-contain"
+                          loading="lazy"
+                        />
                       </div>
                     </div>,
 
-                    // GRAVTON (Orbital Ring Planet + Wide GRAVTON)
+                    // GRAVTON (Real Official Logo: Orbital Ring Planet + Wide GRAVTON)
                     <div key={`gravton-${repIdx}`} className={`flex-shrink-0 w-40 sm:w-48 h-20 sm:h-22 rounded-2xl border transition-all duration-300 flex items-center justify-center p-3 select-none hover:shadow-lg hover:border-orange-500/50 hover:-translate-y-1 ${
                       isLight ? "bg-white border-slate-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)]" : "bg-[#0B1019] border-slate-800/80 shadow-md"
                     }`}>
-                      <div className="flex items-center justify-center gap-2 bg-white px-3.5 py-1.5 rounded-lg shadow-sm">
-                        <svg viewBox="0 0 36 20" className="w-6 h-3.5 shrink-0">
-                          <ellipse cx="18" cy="10" rx="15" ry="3" fill="none" stroke="#000000" strokeWidth="1.4" />
-                          <circle cx="18" cy="10" r="4.5" fill="#000000" />
-                          <path d="M2 10 h32" stroke="#000000" strokeWidth="1.2" />
-                        </svg>
-                        <span className="text-xs sm:text-sm font-black tracking-[0.22em] text-black font-sans uppercase">
-                          GRAVTON
-                        </span>
+                      <div className="flex items-center justify-center bg-white px-3.5 py-1.5 rounded-lg shadow-sm">
+                        <img
+                          src={gravtonLogoImg}
+                          alt="GRAVTON Motors Official Logo"
+                          className="h-5 sm:h-6 w-auto max-w-[125px] sm:max-w-[140px] object-contain"
+                          loading="lazy"
+                        />
                       </div>
                     </div>,
 
-                    // MOTOVOLT (Orange Shield with Crest + MOTOVOLT)
+                    // MOTOVOLT (Real Official Logo: Orange Shield Crest + MOTOVOLT)
                     <div key={`motovolt-${repIdx}`} className={`flex-shrink-0 w-40 sm:w-48 h-20 sm:h-22 rounded-2xl border transition-all duration-300 flex items-center justify-center p-3 select-none hover:shadow-lg hover:border-orange-500/50 hover:-translate-y-1 ${
                       isLight ? "bg-white border-slate-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)]" : "bg-[#0B1019] border-slate-800/80 shadow-md"
                     }`}>
-                      <div className="flex items-center justify-center gap-2">
-                        <svg viewBox="0 0 36 36" className="w-6 sm:w-7 h-6 sm:h-7 shrink-0 drop-shadow-sm">
-                          <path
-                            d="M18 2 L6 7 v11 c0 8 5 13 12 16 c7 -3 12 -8 12 -16 V7 L18 2 Z"
-                            fill="#F97316"
-                          />
-                          <path
-                            d="M18 8 L11 12 v7 c0 5 3 9 7 11 c4 -2 7 -6 7 -11 V12 L18 8 Z"
-                            stroke="#FFFFFF"
-                            strokeWidth="1.5"
-                            fill="none"
-                          />
-                          <path d="M18 12 v8 M14 15 l4 4 l4 -4" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <span className={`text-xs sm:text-sm font-black tracking-widest uppercase font-sans ${
-                          isLight ? "text-slate-900" : "text-white"
-                        }`}>
-                          MOTOVOLT
-                        </span>
+                      <div className="flex items-center justify-center bg-white px-3.5 py-1.5 rounded-lg shadow-sm">
+                        <img
+                          src={motovoltLogoImg}
+                          alt="MOTOVOLT Mobility Official Logo"
+                          className="h-8 sm:h-9 w-auto max-w-[120px] sm:max-w-[135px] object-contain"
+                          loading="lazy"
+                        />
                       </div>
                     </div>,
 
@@ -2875,8 +3583,14 @@ function MainApp({ onReplayIntro }) {
           </ScrollReveal>
         </div>
 
-        <div className="relative z-20 w-full bg-white text-slate-800 py-16 sm:py-20 md:py-24 px-6 sm:px-12 lg:px-20 border-b border-slate-200 shadow-sm">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200 items-stretch">
+        <div className={`relative z-20 w-full py-16 sm:py-20 md:py-24 px-6 sm:px-12 lg:px-20 border-b transition-colors duration-300 ${
+          isLight
+            ? "bg-white text-slate-800 border-slate-200 shadow-sm"
+            : "bg-[#090D17] text-white border-white/10 shadow-2xl"
+        }`}>
+          <div className={`max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x items-stretch ${
+            isLight ? "divide-slate-200" : "divide-white/10"
+          }`}>
             
             {/* Column 1: Visit Us */}
             <ScrollReveal variant="fade-up" delay={50} className="flex flex-col items-center text-center px-6 py-8 md:py-4 space-y-4">
@@ -2884,16 +3598,22 @@ function MainApp({ onReplayIntro }) {
                 <Home size={34} strokeWidth={2} />
               </div>
 
-              <h3 className="text-sm sm:text-base font-extrabold uppercase tracking-wider text-slate-800">
+              <h3 className={`text-sm sm:text-base font-extrabold uppercase tracking-wider ${
+                isLight ? "text-slate-900" : "text-white"
+              }`}>
                 VISIT US
               </h3>
 
-              <p className="text-xs sm:text-[13px] text-slate-400 font-light leading-relaxed max-w-xs">
+              <p className={`text-xs sm:text-[13px] font-normal leading-relaxed max-w-xs ${
+                isLight ? "text-slate-500" : "text-slate-400"
+              }`}>
                 Visit our central fleet command and corporate headquarters in Noida.
               </p>
 
               <div className="pt-2">
-                <span className="text-xs sm:text-sm font-semibold text-[#EF6C1E] leading-relaxed block">
+                <span className={`text-xs sm:text-sm font-semibold leading-relaxed block ${
+                  isLight ? "text-[#EF6C1E]" : "text-orange-400"
+                }`}>
                   Tower B, The Corenthum, Sector 62, Noida, UP, India
                 </span>
               </div>
@@ -2905,18 +3625,24 @@ function MainApp({ onReplayIntro }) {
                 <Phone size={34} strokeWidth={2} />
               </div>
 
-              <h3 className="text-sm sm:text-base font-extrabold uppercase tracking-wider text-slate-800">
+              <h3 className={`text-sm sm:text-base font-extrabold uppercase tracking-wider ${
+                isLight ? "text-slate-900" : "text-white"
+              }`}>
                 CALL US
               </h3>
 
-              <p className="text-xs sm:text-[13px] text-slate-400 font-light leading-relaxed max-w-xs">
+              <p className={`text-xs sm:text-[13px] font-normal leading-relaxed max-w-xs ${
+                isLight ? "text-slate-500" : "text-slate-400"
+              }`}>
                 Speak directly with our partner support, fleet leasing, and rider assistance desks.
               </p>
 
               <div className="pt-2">
                 <a
                   href="tel:+918800023546"
-                  className="text-xs sm:text-sm font-semibold text-[#EF6C1E] hover:underline transition-colors block"
+                  className={`text-xs sm:text-sm font-semibold hover:underline transition-colors block ${
+                    isLight ? "text-[#EF6C1E]" : "text-orange-400"
+                  }`}
                 >
                   +91 88000 23546
                 </a>
@@ -2929,18 +3655,24 @@ function MainApp({ onReplayIntro }) {
                 <Mail size={34} strokeWidth={2} />
               </div>
 
-              <h3 className="text-sm sm:text-base font-extrabold uppercase tracking-wider text-slate-800">
+              <h3 className={`text-sm sm:text-base font-extrabold uppercase tracking-wider ${
+                isLight ? "text-slate-900" : "text-white"
+              }`}>
                 CONTACT US
               </h3>
 
-              <p className="text-xs sm:text-[13px] text-slate-400 font-light leading-relaxed max-w-xs">
+              <p className={`text-xs sm:text-[13px] font-normal leading-relaxed max-w-xs ${
+                isLight ? "text-slate-500" : "text-slate-400"
+              }`}>
                 Drop us an email for corporate fleet partnerships, hub inquiries, and EV retail questions.
               </p>
 
               <div className="pt-2">
                 <a
                   href="mailto:contact@gbgev.com"
-                  className="text-xs sm:text-sm font-semibold text-[#EF6C1E] hover:underline transition-colors block"
+                  className={`text-xs sm:text-sm font-semibold hover:underline transition-colors block ${
+                    isLight ? "text-[#EF6C1E]" : "text-orange-400"
+                  }`}
                 >
                   contact@gbgev.com
                 </a>
@@ -2948,6 +3680,34 @@ function MainApp({ onReplayIntro }) {
             </ScrollReveal>
 
           </div>
+
+          {/* Quick Online Action Banner */}
+          <ScrollReveal variant="fade-up" delay={300} className={`max-w-4xl mx-auto mt-12 pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left ${
+            isLight ? "border-slate-200" : "border-white/10"
+          }`}>
+            <div>
+              <h4 className={`text-base sm:text-lg font-bold ${
+                isLight ? "text-slate-900" : "text-white"
+              }`}>
+                Prefer to submit your fleet or partnership proposal online?
+              </h4>
+              <p className={`text-xs sm:text-sm ${
+                isLight ? "text-slate-500" : "text-slate-400"
+              }`}>
+                Submit an inquiry and our corporate fleet desk in Noida will get back to you with custom terms within 24 hours.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleOpenInquiry("corporate_fleet")}
+                className="px-6 py-3 rounded-full bg-[#EF6C1E] hover:bg-orange-600 text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-md shadow-orange-500/20 active:scale-95 flex items-center gap-2 cursor-pointer"
+              >
+                <span>Submit Partner Proposal</span>
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -2956,8 +3716,16 @@ function MainApp({ onReplayIntro }) {
         8. FOOTER SECTION (MINIMALIST LUXURY STUDIO AESTHETIC)
         ========================================================================
       */}
-      <footer className="relative overflow-hidden border-t border-white/10 bg-[#06080D] text-slate-200 pt-16 sm:pt-20 pb-12 sm:pb-16 px-6 sm:px-12 lg:px-16">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[38rem] h-48 bg-gradient-to-b from-orange-500/10 via-cyan-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <footer className={`relative overflow-hidden border-t transition-colors duration-300 pt-16 sm:pt-20 pb-28 sm:pb-32 md:pb-16 px-6 sm:px-12 lg:px-16 ${
+        isLight
+          ? "bg-slate-50 text-slate-800 border-slate-200"
+          : "bg-[#06080D] text-slate-200 border-white/10"
+      }`}>
+        <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-[38rem] h-48 bg-gradient-to-b rounded-full blur-3xl pointer-events-none ${
+          isLight
+            ? "from-orange-500/10 via-blue-500/5 to-transparent"
+            : "from-orange-500/10 via-cyan-500/5 to-transparent"
+        }`} />
 
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center">
           
@@ -2972,37 +3740,69 @@ function MainApp({ onReplayIntro }) {
                 className="relative inline-block bg-transparent focus:outline-none transition-transform duration-300 hover:scale-105"
                 aria-label="Go Baby Go Cabs"
               >
-                <GoBabyGoLogo className="h-24 sm:h-28 md:h-32 w-auto drop-shadow-[0_8px_20px_rgba(239,108,30,0.2)]" variant="light" />
+                <GoBabyGoLogo className="h-24 sm:h-28 md:h-32 w-auto drop-shadow-[0_8px_20px_rgba(239,108,30,0.2)]" variant={isLight ? "dark" : "light"} />
               </a>
 
-              <p className="mt-3 text-xs sm:text-sm font-medium tracking-wide text-slate-400">
+              <p className={`mt-3 text-xs sm:text-sm font-medium tracking-wide ${
+                isLight ? "text-slate-600" : "text-slate-400"
+              }`}>
                 Powering India's Green Mobility Revolution
               </p>
             </div>
           </ScrollReveal>
 
+          {/* Interactive Backend Newsletter Subscription */}
+          <ScrollReveal variant="fade-up" delay={80} className="w-full">
+            <FooterNewsletter isLight={isLight} />
+          </ScrollReveal>
+
           {/* Clean Thin Divider */}
-          <div className="w-full border-t border-white/10 my-9 sm:my-11" />
+          <div className={`w-full border-t my-9 sm:my-11 ${
+            isLight ? "border-slate-200" : "border-white/10"
+          }`} />
 
           {/* Navigation Links Row */}
           <ScrollReveal variant="fade-up" delay={100} className="w-full">
-            <nav className="flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-12 gap-y-3.5 text-sm sm:text-[15px] font-medium text-slate-300">
-              <a href="#home" className="hover:text-white transition-colors duration-200">
+            <nav className={`flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-12 gap-y-3.5 text-sm sm:text-[15px] font-medium ${
+              isLight ? "text-slate-600" : "text-slate-300"
+            }`}>
+              <a href="#home" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
                 Home
               </a>
-              <a href="#subsidiaries" className="hover:text-white transition-colors duration-200">
-                GBG EV
+              <a
+                href="#gbgev-section"
+                className="hover:opacity-80 transition-all duration-200 flex items-center justify-center p-1"
+                aria-label="GBG EV"
+                title="GBG EV"
+              >
+                <img
+                  src={gbgEvEmblemImg}
+                  alt="GBG EV"
+                  className="h-5 sm:h-6 w-auto object-contain shrink-0 rounded-full hover:scale-105 transition-transform"
+                />
               </a>
-              <a href="#subsidiaries" className="hover:text-white transition-colors duration-200">
-                GBG X
+              <a
+                href="#gbgx-section"
+                className="hover:opacity-80 transition-all duration-200 flex items-center justify-center p-1"
+                aria-label="GBG X"
+                title="GBG X"
+              >
+                <img
+                  src={isLight ? gbgxLogoBlueImg : gbgxLogoWhiteImg}
+                  alt="GBGX Official Logo"
+                  className="h-3.5 sm:h-4 w-auto object-contain shrink-0 hover:scale-105 transition-transform"
+                />
               </a>
-              <a href="#about" className="hover:text-white transition-colors duration-200">
-                About
+              <a href="#about" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
+                Ecosystem
               </a>
-              <a href="#faq" className="hover:text-white transition-colors duration-200">
+              <a href="#network" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
+                Network
+              </a>
+              <a href="#faq" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
                 FAQ
               </a>
-              <a href="#contact" className="hover:text-white transition-colors duration-200">
+              <a href="#contact" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
                 Contact Us
               </a>
             </nav>
@@ -3010,35 +3810,18 @@ function MainApp({ onReplayIntro }) {
 
           {/* Social Media Links Section */}
           <ScrollReveal variant="fade-up" delay={150} className="w-full my-8 sm:my-10 flex flex-col items-center text-center space-y-4">
-            <h4 className="text-base sm:text-lg font-semibold text-white tracking-wide">
+            <h4 className={`text-base sm:text-lg font-semibold tracking-wide ${
+              isLight ? "text-slate-900" : "text-white"
+            }`}>
               Social Media Links
             </h4>
 
-            {/* Subtle Brand Switcher */}
-            <div className="inline-flex items-center p-1 rounded-full bg-white/[0.06] border border-white/10 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setSocialTab("gbgev")}
-                className={`px-4 py-1.5 rounded-full transition-all duration-300 ${
-                  socialTab === "gbgev"
-                    ? "bg-[#EF6C1E] text-white shadow-md shadow-orange-500/30"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                GBG EV
-              </button>
-              <button
-                type="button"
-                onClick={() => setSocialTab("gbgx")}
-                className={`px-4 py-1.5 rounded-full transition-all duration-300 ${
-                  socialTab === "gbgx"
-                    ? "bg-[#2563EB] text-white shadow-md shadow-blue-600/30"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                GBG X
-              </button>
-            </div>
+            {/* Sliding Brand Switcher (GBG EV <-> GBGX) */}
+            <BrandSocialSwitcher
+              socialTab={socialTab}
+              setSocialTab={setSocialTab}
+              isLight={isLight}
+            />
 
             {socialTab === "gbgev" ? (
               <div className="flex items-center justify-center gap-6 sm:gap-7 pt-2">
@@ -3049,7 +3832,9 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG EV on Facebook"
                   title="GBG EV Facebook"
-                  className="text-white hover:opacity-80 hover:scale-110 transition-all duration-200"
+                  className={`transition-all duration-200 ${
+                    isLight ? "text-slate-600 hover:text-[#EF6C1E] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
+                  }`}
                 >
                   <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24">
                     <mask id="fb-mask-footer">
@@ -3067,7 +3852,9 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG EV on YouTube"
                   title="GBG EV YouTube"
-                  className="text-white hover:opacity-80 hover:scale-110 transition-all duration-200"
+                  className={`transition-all duration-200 ${
+                    isLight ? "text-slate-600 hover:text-[#EF6C1E] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
+                  }`}
                 >
                   <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24">
                     <mask id="yt-mask-footer-ev">
@@ -3085,7 +3872,9 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG EV on Instagram"
                   title="GBG EV Instagram"
-                  className="text-white hover:opacity-80 hover:scale-110 transition-all duration-200"
+                  className={`transition-all duration-200 ${
+                    isLight ? "text-slate-600 hover:text-[#EF6C1E] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
+                  }`}
                 >
                   <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="none">
                     <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="currentColor" strokeWidth="2" />
@@ -3101,7 +3890,9 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG EV on LinkedIn"
                   title="GBG EV LinkedIn"
-                  className="text-white hover:opacity-80 hover:scale-110 transition-all duration-200"
+                  className={`transition-all duration-200 ${
+                    isLight ? "text-slate-600 hover:text-[#EF6C1E] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
+                  }`}
                 >
                   <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24">
                     <mask id="li-mask-footer-ev">
@@ -3121,7 +3912,9 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG EV on X"
                   title="GBG EV X"
-                  className="text-white hover:opacity-80 hover:scale-110 transition-all duration-200"
+                  className={`transition-all duration-200 ${
+                    isLight ? "text-slate-600 hover:text-[#EF6C1E] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
+                  }`}
                 >
                   <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24">
                     <mask id="x-mask-footer">
@@ -3141,7 +3934,9 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG X on YouTube"
                   title="GBG X YouTube"
-                  className="text-white hover:opacity-80 hover:scale-110 transition-all duration-200"
+                  className={`transition-all duration-200 ${
+                    isLight ? "text-slate-600 hover:text-[#2563EB] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
+                  }`}
                 >
                   <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24">
                     <mask id="yt-mask-footer-gx">
@@ -3159,7 +3954,9 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG X on Instagram"
                   title="GBG X Instagram"
-                  className="text-white hover:opacity-80 hover:scale-110 transition-all duration-200"
+                  className={`transition-all duration-200 ${
+                    isLight ? "text-slate-600 hover:text-[#2563EB] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
+                  }`}
                 >
                   <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="none">
                     <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="currentColor" strokeWidth="2" />
@@ -3175,7 +3972,9 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG X on LinkedIn"
                   title="GBG X LinkedIn"
-                  className="text-white hover:opacity-80 hover:scale-110 transition-all duration-200"
+                  className={`transition-all duration-200 ${
+                    isLight ? "text-slate-600 hover:text-[#2563EB] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
+                  }`}
                 >
                   <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24">
                     <mask id="li-mask-footer-gx">
@@ -3192,28 +3991,100 @@ function MainApp({ onReplayIntro }) {
           </ScrollReveal>
 
           {/* Legal Links & Copyright Tier */}
-          <ScrollReveal variant="fade-up" delay={200} className="space-y-3 pt-2">
-            <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 text-xs text-slate-400 font-normal">
-              <a href="#faq" className="hover:text-white transition-colors duration-200">
+          <ScrollReveal variant="fade-up" delay={200} className="space-y-4 pt-2">
+            <div className={`flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 text-xs font-normal ${
+              isLight ? "text-slate-500" : "text-slate-400"
+            }`}>
+              <a href="#faq" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
                 Terms & Conditions
               </a>
-              <span className="text-white/20">|</span>
-              <a href="#faq" className="hover:text-white transition-colors duration-200">
+              <span className={isLight ? "text-slate-300" : "text-white/20"}>|</span>
+              <a href="#faq" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
                 Privacy Policy
               </a>
-              <span className="text-white/20">|</span>
-              <a href="#faq" className="hover:text-white transition-colors duration-200">
-                Disclosures
+              <span className={isLight ? "text-slate-300" : "text-white/20"}>|</span>
+              <a href="#faq" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
+                Regulatory Disclosures
               </a>
+              <span className={isLight ? "text-slate-300" : "text-white/20"}>|</span>
+              <button
+                type="button"
+                onClick={() => setAdminModalOpen(true)}
+                className={`transition-colors duration-200 inline-flex items-center gap-1.5 cursor-pointer ${
+                  isLight ? "text-slate-600 hover:text-[#EF6C1E]" : "text-slate-400 hover:text-white"
+                }`}
+                title="Fleet Command Center & Lead Administration"
+              >
+                <Lock size={12} className="text-[#EF6C1E]" />
+                <span>Fleet Command Admin</span>
+              </button>
             </div>
 
-            <p className="text-[11px] sm:text-xs text-slate-500 font-light tracking-wide">
-              © 2026 GoBabyGo Cabs (OPC) Private Limited. All Rights Reserved.
+            <div className={`flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-[11px] font-mono pt-1 ${
+              isLight ? "text-slate-500" : "text-slate-400"
+            }`}>
+              <span>CIN: U60200UP2021OPC144565</span>
+              <span className={`hidden sm:inline ${isLight ? "text-slate-300" : "text-white/20"}`}>•</span>
+              <span>Corporate HQ: Tower B, The Corenthum, Sector 62, Noida, UP</span>
+            </div>
+
+            <p className={`text-[11px] sm:text-xs font-light tracking-wide ${
+              isLight ? "text-slate-500" : "text-slate-400"
+            }`}>
+              © 2026 GoBabyGo Cabs (OPC) Private Limited. All Rights Reserved. Powering India's Green Mobility Ecosystem.
             </p>
           </ScrollReveal>
 
         </div>
       </footer>
+
+      {/* 
+        ========================================================================
+        MOBILE BOTTOM DOCK NAVIGATION BAR
+        - Docked at bottom exclusively on mobile viewports (md:hidden)
+        - Native app-like ergonomics for comfortable one-handed thumb navigation
+        - Dual-brand dynamic styling with frosted glass backdrop blur
+        - Active section detection & animated glowing indicators
+        - Safe-area inset accommodation for borderless OLED phone screens
+        ========================================================================
+      */}
+      {/* 
+        ========================================================================
+        MOBILE SCULPTED FLUID BOTTOM NAVIGATION BAR
+        - Modern fluid curve / raised bubble design matching mobile reference
+        - Smooth animated crest & elevated floating circle
+        - Full touch & scrollspy navigation support
+        ========================================================================
+      */}
+      <MobileCurvedNavBar
+        activeSection={activeSection}
+        handleNavClick={handleNavClick}
+        isLight={isLight}
+      />
+
+      {/* 
+        ========================================================================
+        BACKEND FULLSTACK MODALS (BOOKING, INQUIRY, FLEET ADMIN CONTROL CENTER)
+        Status: Verified & Operational
+        ========================================================================
+      */}
+      <BookingModal
+        isOpen={bookingModalOpen}
+        onClose={() => setBookingModalOpen(false)}
+        initialService={bookingModalService}
+        initialModel={bookingModalModel}
+      />
+
+      <InquiryModal
+        isOpen={inquiryModalOpen}
+        onClose={() => setInquiryModalOpen(false)}
+        initialType={inquiryModalType}
+      />
+
+      <AdminDashboardModal
+        isOpen={adminModalOpen}
+        onClose={() => setAdminModalOpen(false)}
+      />
     </div>
   );
 }
@@ -3343,6 +4214,35 @@ function GbgCabsDeconstructLogo({ className = "w-64 sm:w-80 md:w-96 h-auto" }) {
           willChange: "transform, opacity"
         }}
       >
+        {/* Warm Ambient Backlight Aura & Zoom Bloom */}
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 sm:w-96 h-80 sm:h-96 rounded-full pointer-events-none"
+          style={{
+            background: "radial-gradient(circle, rgba(239, 108, 30, 0.28) 0%, rgba(255, 122, 26, 0.12) 40%, transparent 70%)",
+            animation: "gbgSmoothGlow 2.7s ease-in-out forwards",
+            transformOrigin: "50% 50%",
+            willChange: "transform, opacity",
+            transformStyle: "preserve-3d",
+            backfaceVisibility: "hidden"
+          }}
+        />
+
+        {/* Diagonal Specular Sheen Sweep on Logo */}
+        <div
+          className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl z-30"
+          style={{
+            animation: "gbgSmoothSheenContainer 2.7s ease-out forwards"
+          }}
+        >
+          <div
+            className="w-1/3 h-[250%] -translate-y-1/4 will-change-transform"
+            style={{
+              background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%)",
+              animation: "gbgSmoothSheenBeam 2.7s cubic-bezier(0.4, 0, 0.2, 1) forwards"
+            }}
+          />
+        </div>
+
         {/* Contact Point Impact Shockwave (Dead-center on pointer tip at 77%) */}
         <div
           className="absolute rounded-full border-2 border-[#EF6C1E] pointer-events-none will-change-transform z-20"
@@ -3362,43 +4262,27 @@ function GbgCabsDeconstructLogo({ className = "w-64 sm:w-80 md:w-96 h-auto" }) {
           style={{
             top: "77%",
             left: "50%",
-            width: "90px",
-            height: "90px",
-            background: "radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 130, 35, 0.95) 30%, rgba(239, 108, 30, 0.4) 60%, transparent 75%)",
+            width: "60px",
+            height: "60px",
+            background: "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,180,100,0.8) 40%, rgba(239,108,30,0) 70%)",
             animation: "gbgSmoothFlare 2.7s forwards"
           }}
         />
 
-        {/* Warm Ambient Backlight Aura & Zoom Bloom (Zero-lag pure radial gradient) */}
+        {/* Dynamic Bloom Core on Contact */}
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 sm:w-96 h-80 sm:h-96 rounded-full pointer-events-none"
+          className="absolute rounded-full pointer-events-none will-change-transform z-18"
           style={{
-            background: "radial-gradient(circle, rgba(239, 108, 30, 0.28) 0%, rgba(255, 122, 26, 0.12) 40%, transparent 70%)",
-            animation: "gbgSmoothGlow 2.7s ease-in-out forwards",
-            transformOrigin: "50% 50%",
-            willChange: "transform, opacity",
-            transformStyle: "preserve-3d",
-            backfaceVisibility: "hidden"
+            top: "77%",
+            left: "50%",
+            width: "120px",
+            height: "120px",
+            background: "radial-gradient(circle, rgba(239, 108, 30, 0.45) 0%, transparent 70%)",
+            animation: "gbgSmoothGlow 2.7s forwards"
           }}
         />
 
-        {/* Diagonal Specular Sheen Sweep on Formed Logo */}
-        <div
-          className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-30"
-          style={{
-            animation: "gbgSmoothSheenContainer 2.7s ease-out forwards"
-          }}
-        >
-          <div
-            className="w-1/3 h-[250%] -translate-y-1/4 will-change-transform"
-            style={{
-              background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%)",
-              animation: "gbgSmoothSheenBeam 2.7s cubic-bezier(0.4, 0, 0.2, 1) forwards"
-            }}
-          />
-        </div>
-
-        {/* LAYER 1: CAR DESIGN (Base Vehicle on Stage - GPU Compositor Layer) */}
+        {/* LAYER 1: THE VEHICLE (Geometric Electric Scooter Body) */}
         <div
           className="absolute inset-0 w-full h-full will-change-transform z-10"
           style={{
@@ -3658,6 +4542,8 @@ function GbgIntroLoader({ onComplete }) {
           }
         }
 
+
+
         /* 6. FLOOR SHADOW */
         @keyframes gbgSmoothFloorShadow {
           0%, 23% {
@@ -3749,12 +4635,20 @@ function GbgIntroLoader({ onComplete }) {
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
 
+  const handleIntroComplete = useCallback(() => {
+    setShowIntro(false);
+  }, []);
+
+  const handleReplayIntro = useCallback(() => {
+    setShowIntro(true);
+  }, []);
+
   return (
     <AppErrorBoundary>
       {showIntro && (
-        <GbgIntroLoader onComplete={() => setShowIntro(false)} />
+        <GbgIntroLoader onComplete={handleIntroComplete} />
       )}
-      <MainApp onReplayIntro={() => setShowIntro(true)} />
+      <MainApp onReplayIntro={handleReplayIntro} />
     </AppErrorBoundary>
   );
 }

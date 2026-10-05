@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GoBabyGo Cabs — Official Tax Invoice</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #F1F5F9;
+      color: #0F172A;
+      padding: 40px 20px;
+    }
+
+    .invoice-container {
+      max-width: 850px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      overflow: hidden;
+      border: 1px solid #E2E8F0;
+      position: relative;
+    }
+
+    /* Top Brand Ribbon */
+    .top-ribbon {
+      height: 8px;
+      background: linear-gradient(90deg, #EF6C1E 0%, #F59E0B 50%, #2563EB 100%);
+    }
+
+    .invoice-header {
+      padding: 40px 48px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid #E2E8F0;
+    }
+
+    .brand-col h1 {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: #0F172A;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-col h1 span.orange { color: #EF6C1E; }
+    .brand-col h1 span.blue { color: #2563EB; }
+    .brand-sub {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 4px;
+    }
+    .brand-meta {
+      font-size: 12px;
+      color: #475569;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+
+    .invoice-meta-col {
+      text-align: right;
+    }
+    .invoice-title {
+      font-size: 28px;
+      font-weight: 900;
+      color: #0F172A;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .invoice-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(239, 108, 30, 0.12);
+      color: #EF6C1E;
+      font-weight: 700;
+      font-size: 12px;
+      border-radius: 9999px;
+      margin-top: 6px;
+    }
+
+    /* Bill To & Details Grid */
+    .invoice-parties {
+      padding: 30px 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      background: #F8FAFC;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .party-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+    .party-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0F172A;
+    }
+    .party-desc {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.6;
+      margin-top: 4px;
+    }
+
+    /* Table */
+    .invoice-body {
+      padding: 30px 48px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748B;
+      padding: 12px 14px;
+      border-bottom: 2px solid #E2E8F0;
+      background: #F8FAFC;
+    }
+    td {
+      padding: 16px 14px;
+      font-size: 13px;
+      color: #1E293B;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    td.amount, th.amount {
+      text-align: right;
+    }
+    td strong {
+      display: block;
+      color: #0F172A;
+      font-size: 14px;
+    }
+    td span.sub {
+      color: #64748B;
+      font-size: 12px;
+    }
+
+    /* Summary & Stamps */
+    .invoice-summary {
+      padding: 20px 48px 40px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 40px;
+      align-items: flex-start;
+    }
+
+    .payment-instructions {
+      padding: 20px;
+      border-radius: 14px;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .payment-instructions h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .totals-table {
+      width: 100%;
+    }
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 13px;
+      color: #64748B;
+    }
+    .totals-row.grand-total {
+      border-top: 2px solid #E2E8F0;
+      margin-top: 8px;
+      padding-top: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      color: #0F172A;
+    }
+    .totals-row.grand-total span.orange {
+      color: #EF6C1E;
+    }
+
+    /* Paid Stamp */
+    .stamp-paid {
+      position: absolute;
+      top: 220px;
+      right: 60px;
+      border: 4px solid #10B981;
+      color: #10B981;
+      font-size: 26px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      padding: 8px 24px;
+      border-radius: 12px;
+      transform: rotate(-12deg);
+      opacity: 0.85;
+      pointer-events: none;
+      mask-image: radial-gradient(circle, black 70%, transparent 100%);
+    }
+
+    /* Signatory */
+    .signature-area {
+      margin-top: 30px;
+      text-align: right;
+    }
+    .signature-line {
+      display: inline-block;
+      width: 180px;
+      border-top: 1.5px dashed #94A3B8;
+      padding-top: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #475569;
+    }
+
+    /* Footer */
+    .invoice-footer {
+      background: #090D14;
+      color: #94A3B8;
+      padding: 24px 48px;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .invoice-footer span.highlight {
+      color: #EF6C1E;
+      font-weight: 600;
+    }
+
+    @media print {
+      body { padding: 0; background: #FFF; }
+      .invoice-container { box-shadow: none; border: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="invoice-container">
+    <div class="top-ribbon"></div>
+
+    <!-- STAMP -->
+    <div class="stamp-paid">PAID IN FULL</div>
+
+    <!-- HEADER -->
+    <header class="invoice-header">
+      <div class="brand-col">
+        <h1>
+          <svg width="34" height="34" viewBox="0 0 200 200" fill="none">
+            <path d="M100 12 C60 12 36 42 36 78 C36 110 88 142 100 154 C112 142 164 110 164 78 C164 42 140 12 100 12 Z" stroke="#EF6C1E" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="100" cy="56" r="22" fill="#EF6C1E" />
+            <path d="M48 106 C44 122 44 136 45 152 C45 156 50 158 54 158 H70 C74 158 76 154 76 150 V142 H124 V150 C124 154 126 158 130 158 H146 C150 158 155 156 155 152 C156 136 156 122 152 106 C148 94 136 88 124 86 H76 C64 88 52 94 48 106 Z" stroke="#0F172A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span><span class="orange">GoBabyGo</span> Cabs</span>
+        </h1>
+        <div class="brand-sub">GoBabyGo Cabs (OPC) Private Limited</div>
+        <div class="brand-meta">
+          Tower B, The Corenthum, Sector 62<br>
+          Noida, Uttar Pradesh 201301, India<br>
+          Email: contact@gbgev.com | Phone: +91 88000 23546<br>
+          GSTIN: 09AABCU9603R1ZM (Sample)
+        </div>
+      </div>
+
+      <div class="invoice-meta-col">
+        <div class="invoice-title">TAX INVOICE</div>
+        <div class="invoice-badge">GBG EV MOBILITY</div>
+        <div style="margin-top: 14px; font-size: 13px; color: #475569; line-height: 1.6;">
+          <strong>Invoice #:</strong> GBG-INV-2026-0842<br>
+          <strong>Date:</strong> 03 Oct, 2026<br>
+          <strong>Due Date:</strong> Immediate (Pre-Paid)<br>
+          <strong>Reference:</strong> GBG-BK-F4051531
+        </div>
+      </div>
+    </header>
+
+    <!-- BILLING PARTIES -->
+    <div class="invoice-parties">
+      <div>
+        <div class="party-title">Billed To (Client / Rider):</div>
+        <div class="party-name">Vikram Malhotra</div>
+        <div class="party-desc">
+          QuickLogistics Pilot Hub #14<br>
+          Sector 63, Noida, Uttar Pradesh<br>
+          Phone: +91 98101 23456<br>
+          Email: vikram@example.com
+        </div>
+      </div>
+
+      <div>
+        <div class="party-title">Service Details & Telematics:</div>
+        <div class="party-name">Commercial EV Scooter Subscription</div>
+        <div class="party-desc">
+          <strong>Assigned Model:</strong> Motovolt Urbano Commercial<br>
+          <strong>Battery Plan:</strong> Unlimited 90-Sec Swapping (Prime 48)<br>
+          <strong>Hub Location:</strong> Sector 62 Noida Swap Hub<br>
+          <strong>Duration:</strong> 30-Day Monthly Lease
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="invoice-body">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 50%;">Description / Service Item</th>
+            <th style="width: 15%; text-align: center;">SAC / HSN</th>
+            <th style="width: 15%; text-align: center;">Qty / Days</th>
+            <th style="width: 20%;" class="amount">Amount (INR)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <strong>GBG EV Commercial Scooter Rental</strong>
+              <span class="sub">30-day electric two-wheeler rental package with routine preventative maintenance</span>
+            </td>
+            <td style="text-align: center; color: #64748B;">997311</td>
+            <td style="text-align: center;">30 Days</td>
+            <td class="amount">₹5,500.00</td>
+          </tr>
+          <tr>
+            <td>
+              <strong>75+ Hub Rapid Battery Swapping Access</strong>
+              <span class="sub">Unlimited smart lithium swapping passes across Delhi-NCR network</span>
+            </td>
+            <td style="text-align: center; color: #64748B;">998714</td>
+            <td style="text-align: center;">1 Plan</td>
+            <td class="amount">₹2,200.00</td>
+          </tr>
+          <tr>
+            <td>
+              <strong>Comprehensive Insurance & Telematics Cover</strong>
+              <span class="sub">GPS anti-theft tracking, 24/7 roadside breakdown assistance, and third-party rider cover</span>
+            </td>
+            <td style="text-align: center; color: #64748B;">997133</td>
+            <td style="text-align: center;">1 Month</td>
+            <td class="amount">₹650.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SUMMARY & PAYMENT -->
+    <div class="invoice-summary">
+      <div class="payment-instructions">
+        <h4>
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          Payment & Settlement Details
+        </h4>
+        <strong>Beneficiary:</strong> GoBabyGo Cabs Private Limited<br>
+        <strong>Bank:</strong> HDFC Bank Ltd, Sector 62 Noida Branch<br>
+        <strong>Account No:</strong> 50200088992341 (Sample)<br>
+        <strong>IFSC Code:</strong> HDFC0001234<br>
+        <strong>UPI ID:</strong> gbgev@hdfcbank<br>
+        <em>Payment received via Razorpay / Direct Bank UPI on 03-Oct-2026.</em>
+      </div>
+
+      <div>
+        <div class="totals-table">
+          <div class="totals-row">
+            <span>Subtotal:</span>
+            <span>₹8,350.00</span>
+          </div>
+          <div class="totals-row">
+            <span>CGST (2.5%):</span>
+            <span>₹208.75</span>
+          </div>
+          <div class="totals-row">
+            <span>SGST (2.5%):</span>
+            <span>₹208.75</span>
+          </div>
+          <div class="totals-row grand-total">
+            <span>Total Payable:</span>
+            <span class="orange">₹8,767.50</span>
+          </div>
+        </div>
+
+        <div class="signature-area">
+          <div style="height: 40px; font-family: 'Brush Script MT', cursive, sans-serif; font-size: 22px; color: #2563EB;">
+            Akash Ali
+          </div>
+          <div class="signature-line">
+            Authorized Signatory<br>
+            GoBabyGo Cabs Pvt. Ltd.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="invoice-footer">
+      <div>
+        Thank you for driving India towards a <span class="highlight">zero-emission green mobility future</span>.
+      </div>
+      <div>
+        Computer generated tax invoice • Valid without physical seal
+      </div>
+    </footer>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,69 @@
+# ==============================================================================
+# GoBabyGo Cabs - Docker Compose Multi-Container Stack
+# Launches: PHP 8.3 Apache Backend + MySQL 8.0 Database + Adminer DB GUI
+# Run: docker compose up -d
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  # 1. PHP 8.3 Backend Web Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gbg_backend
+    restart: always
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME:-gbg_cabs_db}
+      - DB_USER=${DB_USER:-gbg_user}
+      - DB_PASS=${DB_PASS}
+    depends_on:
+      - database
+    networks:
+      - gbg_network
+
+  # 2. MySQL 8.0 Production Database
+  database:
+    image: mysql:8.0
+    container_name: gbg_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:-gbg_cabs_db}
+      MYSQL_USER: ${DB_USER:-gbg_user}
+      MYSQL_PASSWORD: ${DB_PASS}
+    # Bound to loopback interface only (not published to public internet)
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - gbg_mysql_data:/var/lib/mysql
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - gbg_network
+
+  # 3. Optional Database Management Web GUI (Accessible on loopback only)
+  adminer:
+    image: adminer:latest
+    container_name: gbg_adminer
+    restart: always
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - database
+    networks:
+      - gbg_network
+
+networks:
+  gbg_network:
+    driver: bridge
+
+volumes:
+  gbg_mysql_data:

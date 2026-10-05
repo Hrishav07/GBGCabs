@@ -1,0 +1,42 @@
+# ==============================================================================
+# GoBabyGo Cabs - Apache Production Configuration (.htaccess)
+# ==============================================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # 1. Protect Sensitive Files & Directories
+    RewriteRule ^(\.env|\.git|database/.*\.sql|config/.*|data/.*|helpers/.*|models/.*)$ - [F,L,NC]
+
+    # 2. Authorization Header Pass-Through (Crucial for Bearer JWT Auth on FastCGI/PHP-FPM)
+    RewriteCond %{HTTP:Authorization} ^(.*)
+    RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+    # 3. Route /api/* requests to /backend/api/* if accessed directly
+    # Allows both clean URLs /api/bookings and /api/bookings.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api/([a-zA-Z0-9_\-\/]+)$ api/$1.php [L,QSA]
+</IfModule>
+
+# Block listing of directory contents
+Options -Indexes
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Gzip Compression for Fast Loading
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/javascript
+</IfModule>

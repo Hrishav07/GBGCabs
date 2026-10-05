@@ -11,14 +11,90 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#EF6C1E" />
     <meta name="description" content="Go Baby Go Cabs — Powering India's Green Mobility Revolution. Sustainable Electric Commercial Fleet Solutions & Multi-Brand EV Ecosystem." />
+    <link rel="stylesheet" href="/loader.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/assets/index-1MubPDbN.js"></script>
+
+    <!-- Pre-hydration Theme Initializer (prevents theme flash) -->
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('gbg_theme') || 'dark';
+          var root = document.documentElement;
+          if (t === 'light') {
+            root.classList.add('light');
+            root.classList.remove('dark');
+            root.style.colorScheme = 'light';
+            root.style.backgroundColor = '#F8FAFC';
+          } else {
+            root.classList.add('dark');
+            root.classList.remove('light');
+            root.style.colorScheme = 'dark';
+            root.style.backgroundColor = '#090D14';
+          }
+        } catch(e) {}
+      })();
+    </script>
+
+    <!-- Silky-Smooth Hardware-Accelerated Theme Transition (View Transitions API) -->
+    <style>
+      ::view-transition-old(root),
+      ::view-transition-new(root) {
+        animation: none;
+        mix-blend-mode: normal;
+      }
+      ::view-transition-old(root) {
+        z-index: 1;
+      }
+      ::view-transition-new(root) {
+        z-index: 9999;
+      }
+
+      /* Silky-smooth crossfade fallback if clip-path is not supported or reduced-motion is requested */
+      @media (prefers-reduced-motion: reduce) {
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+          animation-duration: 0.01ms !important;
+        }
+      }
+
+      html {
+        color-scheme: dark;
+        background-color: #090D14;
+      }
+      html.light {
+        color-scheme: light;
+        background-color: #F8FAFC;
+      }
+      body {
+        margin: 0;
+        background-color: inherit;
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-CHohOH4q.js"></script>
   </head>
-  <body class="bg-[#F7F7F8]">
-    <div id="root"></div>
+  <body class="bg-inherit">
+    <div id="root">
+      <div id="initial-loader" class="initial-loader">
+        <div class="initial-loader-spinner"></div>
+        <div class="initial-loader-title">GoBabyGo Cabs</div>
+        <div class="initial-loader-subtitle">Connecting India's Green Mobility Fleet...</div>
+      </div>
+    </div>
+    <script>
+      window.addEventListener('error', function(e) {
+        var loader = document.getElementById('initial-loader');
+        if (loader) {
+          loader.innerHTML = '<div class="loader-error-box">' +
+            '<div class="loader-error-title">GBG Cabs Display Notice</div>' +
+            '<div class="loader-error-desc">The browser is updating the interface modules. Please perform a quick refresh.</div>' +
+            '<button onclick="location.reload()" class="loader-error-btn">Refresh Page</button>' +
+            '</div>';
+        }
+      });
+    </script>
   </body>
 </html>
