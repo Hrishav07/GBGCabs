@@ -8,7 +8,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+        heading: ['Syne', '"Space Grotesk"', 'sans-serif'],
+        syne: ['Syne', 'sans-serif'],
+        space: ['"Space Grotesk"', 'sans-serif'],
+        jakarta: ['"Plus Jakarta Sans"', 'sans-serif'],
       },
     },
   },

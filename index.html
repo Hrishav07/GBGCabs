@@ -13,10 +13,25 @@
     <meta name="description" content="Go Baby Go Cabs — Powering India's Green Mobility Revolution. Sustainable Electric Commercial Fleet Solutions & Multi-Brand EV Ecosystem." />
     <link rel="stylesheet" href="/loader.css" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+              heading: ['Syne', '"Space Grotesk"', 'sans-serif'],
+              syne: ['Syne', 'sans-serif'],
+              space: ['"Space Grotesk"', 'sans-serif'],
+              jakarta: ['"Plus Jakarta Sans"', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <!-- Google Fonts: Syne, Space Grotesk, Plus Jakarta Sans, Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 
     <!-- Pre-hydration Theme Initializer (prevents theme flash) -->
     <script>
@@ -59,6 +74,22 @@
         ::view-transition-new(root) {
           animation-duration: 0.01ms !important;
         }
+      }
+
+      :root {
+        --font-heading: 'Syne', 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+        --font-body: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      html, body, button, input, textarea, select {
+        font-family: var(--font-body);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      h1, h2, h3, h4, h5, h6, .font-heading {
+        font-family: var(--font-heading);
+        letter-spacing: -0.02em;
       }
 
       html {
