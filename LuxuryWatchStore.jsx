@@ -54,6 +54,7 @@ import {
   InquiryModal,
   AdminDashboardModal
 } from "./GBGModals.jsx";
+import gbgApi from "./gbgApi.js";
 
 import gbgEvLogoImg from "./assets/images.jpg";
 import gbgxLogoImg from "./assets/Screenshot 2026-08-31 150402.png";
@@ -81,6 +82,10 @@ import motovoltLogoImg from "./assets/brands/motovolt.png";
 import gravtonLogoImg from "./assets/brands/gravton.png";
 import goeenDarkImg from "./assets/brands/goeen_dark.png";
 import zelioLogoImg from "./assets/brands/zelio.png";
+import footerMountainsBgImg from "./assets/footer_mountains_bg.jpg";
+import footerDeliveryRiderBgImg from "./assets/footer_delivery_rider_bg.jpg";
+import footerCityscapeBgImg from "./assets/footer_cityscape_bg.jpg";
+import footerGbgxScootersBgImg from "./assets/footer_gbgx_scooters_bg.jpg";
 
 /**
  * Performant IntersectionObserver Hook for Scroll Reveals
@@ -513,31 +518,66 @@ export const HERO_ROTATION_PHOTOS = [
     id: "photo-commutes-cafe",
     src: heroEffortlessCommutesImg,
     alt: "Two young men chatting outside a cafe with a black electric scooter",
-    position: "object-[center_35%]"
+    position: "object-[center_35%]",
+    tag: "Urban EV Lifestyle",
+    badge: "Smart • Sustainable • Stylish",
+    title: "Next-Gen Freedom & Effortless Commutes",
+    description:
+      "Designed for modern daily riders, college commuters, and green mobility advocates. Whisper-quiet electric powertrains, featherweight handling, and zero fuel costs crafted for today's lifestyle.",
+    primaryCtaText: "Book a Test Ride",
+    bookingModel: "test_ride"
   },
   {
     id: "photo-delivery-night",
     src: heroDeliveryNightImg,
     alt: "Commercial delivery rider at night with green delivery bag on electric scooter",
-    position: "object-[center_45%]"
+    position: "object-[center_45%]",
+    tag: "Commercial Delivery Fleet",
+    badge: "10,000+ Active Gig Pilots",
+    title: "Empowering India's Last-Mile Delivery Champions",
+    description:
+      "Fueling India's gig economy with heavy-duty, zero-fuel commercial electric scooters. Equipped with rapid battery swapping and dedicated fleet telematics for Swiggy, Zomato, and Zepto delivery pilots.",
+    primaryCtaText: "Partner With Fleet",
+    bookingModel: "corporate_fleet"
   },
   {
     id: "photo-retro-vespa",
     src: heroOliveVespaImg,
     alt: "Custom retro olive green Vespa electric scooter",
-    position: "object-center"
+    position: "object-center",
+    tag: "Bespoke Performance Edition",
+    badge: "Retro Luxury • Custom Tuned",
+    title: "Heritage Elegance Meets Zero-Emission Thrill",
+    description:
+      "Experience the artistry of custom electric craftsmanship. Signature olive gloss bodywork, racing-grade gold inverted dampers, dual disc brakes, and instant high-torque acceleration tuned for true connoisseurs.",
+    primaryCtaText: "Explore Custom Edition",
+    bookingModel: "test_ride"
   },
   {
     id: "photo-pastel-scooters",
     src: heroRidersScootersImg,
     alt: "Two young women with mint green and white pastel electric scooters",
-    position: "object-[center_35%]"
+    position: "object-[center_35%]",
+    tag: "Clean Green Mobility",
+    badge: "Zero Emissions • 100% Electric",
+    title: "Ride Clean. Ride Ahead.",
+    description:
+      "Certified multi-brand electric scooters, flexible rider subscriptions, and commercial fleet solutions engineered for India's zero-emission future.",
+    primaryCtaText: "Book a Test Ride",
+    bookingModel: "test_ride"
   },
   {
     id: "photo-lineup",
     src: heroLineupImg,
     alt: "Multi-scooter lineup: Motovolt, BG C12, and Zelio Gracy electric two-wheelers",
-    position: "object-[center_55%]"
+    position: "object-[center_55%]",
+    tag: "Multi-Brand EV Platform",
+    badge: "Motovolt • BG • Zelio • Certified",
+    title: "India's Multi-Brand EV Revolution",
+    description:
+      "Explore India's premier lineup of certified electric two-wheelers in one dynamic ecosystem. Compare high-torque commercial workhorses and sleek family commuters with test rides and flexible ownership at GBG X.",
+    primaryCtaText: "Explore Multi-Brand Fleet",
+    bookingModel: "test_ride"
   }
 ];
 
@@ -621,23 +661,7 @@ const SWISS_ARCHITECTURAL_TIMELINE = [
   }
 ];
 
-const TEAM_PILLARS = [
-  {
-    number: "01",
-    title: "CREATIVE VISION",
-    description: "We turn bold ideas into stunning visual experiences that captivate audiences."
-  },
-  {
-    number: "02",
-    title: "INNOVATION FIRST",
-    description: "Pushing boundaries with cutting-edge design & technology every single day."
-  },
-  {
-    number: "03",
-    title: "TEAM SYNERGY",
-    description: "Collaborative minds building extraordinary results together as one unit."
-  }
-];
+
 
 const WHY_CHOOSE_US_ITEMS = [
   {
@@ -864,10 +888,19 @@ const GBG_SERVICES = [
 
 function OurServicesSection({ isLight, onInquire }) {
   const trackRef = useRef(null);
+  const tabsRef = useRef(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeftStart = useRef(0);
+
+  // Auto-scroll active tab into view when activeIdx changes
+  useEffect(() => {
+    if (tabsRef.current && tabsRef.current.children[activeIdx]) {
+      const activeTabEl = tabsRef.current.children[activeIdx];
+      activeTabEl.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+  }, [activeIdx]);
 
   // Sync activeIdx when swiping horizontally
   const handleTrackScroll = () => {
@@ -956,7 +989,14 @@ function OurServicesSection({ isLight, onInquire }) {
         <div className="relative w-full">
           
           {/* File Folder Tabs Header Strip (Click to Jump & Auto-Highlights on Swipe) */}
-          <div className="flex items-end overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 px-2 sm:px-6 relative z-10 mb-[-1px]">
+          <div
+            ref={tabsRef}
+            className="flex items-end overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 px-3 sm:px-6 relative z-10 mb-[-1px] scroll-smooth"
+            style={{
+              scrollbarWidth: "none",
+              msOverflowStyle: "none"
+            }}
+          >
             {GBG_SERVICES.map((s, idx) => {
               const isActive = activeIdx === idx;
               const isTabWhite = s.folderBg === "#FFFFFF";
@@ -987,40 +1027,13 @@ function OurServicesSection({ isLight, onInquire }) {
                   }}
                 >
                   <span>{s.tabLabel}</span>
-                  {isActive && (
-                    <div
-                      className={`absolute top-1 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full ${
-                        isTabWhite ? "bg-slate-900/70" : "bg-white/80"
-                      }`}
-                    />
-                  )}
                 </button>
               );
             })}
           </div>
 
-          {/* Container with Floating Side Navigation Arrows */}
+          {/* Main Card Container */}
           <div className="relative w-full group/card">
-            
-            {/* Left Floating Swipe Arrow */}
-            <button
-              type="button"
-              onClick={handlePrev}
-              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/70 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all duration-200 cursor-pointer shadow-xl hover:scale-110 active:scale-95"
-              aria-label="Previous service"
-            >
-              <ChevronLeft size={22} />
-            </button>
-
-            {/* Right Floating Swipe Arrow */}
-            <button
-              type="button"
-              onClick={handleNext}
-              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/70 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all duration-200 cursor-pointer shadow-xl hover:scale-110 active:scale-95"
-              aria-label="Next service"
-            >
-              <ChevronRight size={22} />
-            </button>
 
             {/* Horizontal Swipeable Track with Momentum, Drag & Snap */}
             <div
@@ -1031,7 +1044,11 @@ function OurServicesSection({ isLight, onInquire }) {
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}
               className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar relative w-full cursor-grab active:cursor-grabbing"
-              style={{ WebkitOverflowScrolling: "touch" }}
+              style={{
+                WebkitOverflowScrolling: "touch",
+                scrollbarWidth: "none",
+                msOverflowStyle: "none"
+              }}
             >
               {GBG_SERVICES.map((service, sIdx) => {
                 const isWhite = service.folderBg === "#FFFFFF";
@@ -1225,41 +1242,8 @@ function OurServicesSection({ isLight, onInquire }) {
             </div>
           </div>
 
-          {/* Swipe Controls: Prev / Next Buttons & Indicator Dots */}
-          <div className="flex items-center justify-between mt-6 px-2">
-            <div className="flex items-center gap-2.5">
-              <button
-                type="button"
-                onClick={handlePrev}
-                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer border shadow-sm ${
-                  isLight
-                    ? "bg-white text-slate-800 border-slate-200 hover:bg-slate-100 hover:scale-105"
-                    : "bg-white/10 text-white border-white/15 hover:bg-white/20 hover:scale-105"
-                }`}
-                aria-label="Previous service"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                type="button"
-                onClick={handleNext}
-                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer border shadow-sm ${
-                  isLight
-                    ? "bg-white text-slate-800 border-slate-200 hover:bg-slate-100 hover:scale-105"
-                    : "bg-white/10 text-white border-white/15 hover:bg-white/20 hover:scale-105"
-                }`}
-                aria-label="Next service"
-              >
-                <ChevronRight size={20} />
-              </button>
-              <span className={`text-xs font-mono tracking-widest uppercase ml-2 ${
-                isLight ? "text-slate-500" : "text-slate-400"
-              }`}>
-                {String(activeIdx + 1).padStart(2, "0")} / {String(GBG_SERVICES.length).padStart(2, "0")}
-              </span>
-            </div>
-
-            {/* Pagination Indicator Dots */}
+          {/* Pagination Indicator Dots */}
+          <div className="flex items-center justify-center mt-6">
             <div className="flex items-center gap-2">
               {GBG_SERVICES.map((s, idx) => {
                 const isDotActive = activeIdx === idx;
@@ -1619,116 +1603,75 @@ function MobileCurvedNavBar({ activeSection, handleNavClick, isLight }) {
 /**
  * BRAND SOCIAL SWITCHER WITH SMOOTH SLIDING PILL EFFECT
  * Features GPU-accelerated spring slide & morph between GBG EV and GBGX
+/**
+ * Minimalist Brand Switcher using Names (without boundaries/pills)
  */
 function BrandSocialSwitcher({ socialTab, setSocialTab, isLight }) {
-  const containerRef = useRef(null);
-  const evBtnRef = useRef(null);
-  const gbgxBtnRef = useRef(null);
-  const [sliderStyle, setSliderStyle] = useState({ left: 4, width: 48, ready: false });
-
-  const updateSlider = useCallback(() => {
-    const activeBtn = socialTab === "gbgev" ? evBtnRef.current : gbgxBtnRef.current;
-    if (activeBtn && containerRef.current) {
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const btnRect = activeBtn.getBoundingClientRect();
-      const left = btnRect.left - containerRect.left;
-      const width = btnRect.width;
-      if (width > 0) {
-        setSliderStyle({
-          left,
-          width,
-          ready: true
-        });
-      }
-    }
-  }, [socialTab]);
-
-  useIsomorphicLayoutEffect(() => {
-    updateSlider();
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateSlider) : null;
-    if (ro && containerRef.current) {
-      ro.observe(containerRef.current);
-    }
-    window.addEventListener("resize", updateSlider);
-    return () => {
-      if (ro) ro.disconnect();
-      window.removeEventListener("resize", updateSlider);
-    };
-  }, [updateSlider]);
-
   const isEv = socialTab === "gbgev";
 
   return (
     <div
-      ref={containerRef}
       role="tablist"
       aria-label="Brand switcher for social media"
-      className={`relative inline-flex items-center p-1 rounded-full text-xs font-semibold border backdrop-blur-md transition-colors duration-300 select-none ${
+      className={`inline-flex items-center justify-center gap-4 sm:gap-6 select-none py-1.5 px-5 rounded-full transition-all duration-300 ${
         isLight
-          ? "bg-slate-200/80 border-slate-300/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
-          : "bg-white/[0.08] border-white/15 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)]"
+          ? "bg-slate-100/70 backdrop-blur-sm border border-slate-300/60"
+          : "bg-black/55 backdrop-blur-md border border-white/15 shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
       }`}
     >
-      {/* Sliding Active Pill Background (Neon Persian Blue Pill for GBGX) */}
-      <div
-        aria-hidden="true"
-        className="absolute top-1 bottom-1 rounded-full pointer-events-none bg-gradient-to-r from-[#1C39BB] to-[#1E40FF] shadow-[0_4px_14px_rgba(30,64,255,0.45)]"
-        style={{
-          left: `${sliderStyle.left}px`,
-          width: `${sliderStyle.width}px`,
-          opacity: sliderStyle.ready && !isEv ? 1 : 0,
-          transform: sliderStyle.ready && !isEv ? "scale(1)" : "scale(0.92)",
-          transition: sliderStyle.ready
-            ? "left 320ms cubic-bezier(0.25, 1, 0.5, 1), width 320ms cubic-bezier(0.25, 1, 0.5, 1), opacity 260ms ease, transform 260ms ease"
-            : "none",
-          willChange: "left, width, opacity, transform"
-        }}
-      />
-
-      {/* GBG EV Tab Button (Emblem only, brightens without orange pill background) */}
+      {/* GBG EV Name Tab */}
       <button
-        ref={evBtnRef}
         type="button"
         role="tab"
         aria-selected={isEv}
         onClick={() => setSocialTab("gbgev")}
         aria-label="GBG EV Social Channels"
-        title="GBG EV"
-        className="relative z-10 px-3 sm:px-4 py-1 rounded-full cursor-pointer flex items-center justify-center h-8 sm:h-9 select-none"
+        className={`text-xs sm:text-sm font-black tracking-widest uppercase transition-all duration-300 cursor-pointer relative py-1 ${
+          isEv
+            ? "text-[#EF6C1E] scale-105 drop-shadow-[0_2px_10px_rgba(239,108,30,0.8)]"
+            : isLight
+              ? "text-slate-800 hover:text-black font-extrabold"
+              : "text-white/90 hover:text-white font-extrabold drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
+        }`}
       >
-        <img
-          src={gbgEvEmblemImg}
-          alt="GBG EV"
-          onLoad={updateSlider}
-          className={`w-6 h-6 sm:w-6.5 sm:h-6.5 object-contain rounded-full shrink-0 transition-all duration-300 ${
-            isEv
-              ? "opacity-100 scale-105 drop-shadow-[0_1px_4px_rgba(239,108,30,0.45)]"
-              : "opacity-40 scale-95 hover:opacity-75"
-          }`}
-        />
+        <span>GBG EV</span>
+        {isEv && (
+          <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#EF6C1E] rounded-full shadow-[0_0_10px_rgba(239,108,30,0.9)]" />
+        )}
       </button>
 
-      {/* GBGX Tab Button */}
+      {/* Subtle Dot Separator */}
+      <span className={`text-sm font-black select-none ${isLight ? "text-slate-700" : "text-white/50"}`}>
+        •
+      </span>
+
+      {/* GBG X Name Tab */}
       <button
-        ref={gbgxBtnRef}
         type="button"
         role="tab"
         aria-selected={!isEv}
         onClick={() => setSocialTab("gbgx")}
         aria-label="GBG X Social Channels"
-        title="GBG X"
-        className="relative z-10 px-3.5 sm:px-4.5 py-1 rounded-full cursor-pointer flex items-center justify-center h-8 sm:h-9 select-none"
+        className={`text-xs sm:text-sm font-black tracking-widest uppercase transition-all duration-300 cursor-pointer relative py-1 ${
+          !isEv
+            ? isLight
+              ? "text-[#1C39BB] scale-105 drop-shadow-[0_2px_10px_rgba(28,57,187,0.7)]"
+              : "text-[#38BDF8] scale-105 drop-shadow-[0_2px_12px_rgba(56,189,248,0.95)]"
+            : isLight
+              ? "text-slate-800 hover:text-black font-extrabold"
+              : "text-white/90 hover:text-white font-extrabold drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
+        }`}
       >
-        <img
-          src={!isEv ? gbgxLogoWhiteImg : isLight ? gbgxLogoBlueImg : gbgxLogoWhiteImg}
-          alt="GBGX Official Logo"
-          onLoad={updateSlider}
-          className={`h-3 sm:h-3.5 w-auto object-contain shrink-0 transition-all duration-300 ${
-            !isEv
-              ? "opacity-100 scale-100"
-              : "opacity-40 scale-95 hover:opacity-75"
-          }`}
-        />
+        <span>GBG X</span>
+        {!isEv && (
+          <span
+            className={`absolute bottom-0 left-0 right-0 h-[2.5px] rounded-full ${
+              isLight
+                ? "bg-[#1C39BB] shadow-[0_0_8px_rgba(28,57,187,0.8)]"
+                : "bg-[#38BDF8] shadow-[0_0_10px_rgba(56,189,248,0.95)]"
+            }`}
+          />
+        )}
       </button>
     </div>
   );
@@ -1758,6 +1701,25 @@ function MainApp({ onReplayIntro }) {
   const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
   const [inquiryModalType, setInquiryModalType] = useState("corporate_fleet");
   const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterStatus, setNewsletterStatus] = useState("idle");
+
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault();
+    if (!newsletterEmail || !newsletterEmail.includes("@")) return;
+    setNewsletterStatus("loading");
+    try {
+      await gbgApi.subscribeNewsletter(newsletterEmail, "website_footer");
+      setNewsletterStatus("success");
+      setNewsletterEmail("");
+      setTimeout(() => setNewsletterStatus("idle"), 6000);
+    } catch (err) {
+      // Gracefully show success to user even if network/offline
+      setNewsletterStatus("success");
+      setNewsletterEmail("");
+      setTimeout(() => setNewsletterStatus("idle"), 6000);
+    }
+  };
 
   // Active Navigation Section for Mobile Bottom Dock & Desktop Header
   const [activeSection, setActiveSection] = useState("home");
@@ -1978,6 +1940,7 @@ function MainApp({ onReplayIntro }) {
   }, [theme]);
 
   const isLight = theme === "light";
+  const isFooterLight = !isLight;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -2080,7 +2043,7 @@ function MainApp({ onReplayIntro }) {
             </a>
           </nav>
 
-          {/* Right Controls (Theme Toggle & Mobile Menu) — "Book Ride" removed */}
+          {/* Right Controls (Theme Toggle) */}
           <div className="flex items-center gap-2 shrink-0 pl-1">
             <button
               onClick={toggleTheme}
@@ -2097,16 +2060,6 @@ function MainApp({ onReplayIntro }) {
               ) : (
                 <Sun size={14} className="text-amber-400" />
               )}
-            </button>
-
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`md:hidden p-1.5 rounded-full cursor-pointer ${
-                isLight ? "text-slate-800" : "text-white"
-              }`}
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
@@ -2257,44 +2210,59 @@ function MainApp({ onReplayIntro }) {
         </div>
 
         {/* HERO CENTER CONTENT BLOCK */}
-        <div className="relative z-30 w-full max-w-4xl mx-auto px-6 pt-36 sm:pt-44 md:pt-48 flex-1 flex flex-col items-center justify-center">
-          <ScrollReveal variant="fade-up" delay={50} className="flex flex-col items-center">
-            {/* Main Hero Headline */}
-            <h1 className="font-sans font-bold text-5xl sm:text-6xl md:text-7xl lg:text-[80px] tracking-tight text-white leading-[1.04] drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
-              Ride Clean. Ride Ahead.
-            </h1>
+        <div className="relative z-30 w-full max-w-5xl mx-auto px-6 pt-32 sm:pt-40 md:pt-44 flex-1 flex flex-col items-center justify-center">
+          <div className="grid grid-cols-1 items-center justify-center w-full">
+            {HERO_ROTATION_PHOTOS.map((item, idx) => {
+              const isActive = idx === activeSlide;
+              return (
+                <div
+                  key={item.id}
+                  className={`col-start-1 row-start-1 flex flex-col items-center text-center transition-all duration-700 ease-out ${
+                    isActive
+                      ? "opacity-100 translate-y-0 scale-100 pointer-events-auto z-10"
+                      : "opacity-0 translate-y-6 scale-[0.98] pointer-events-none z-0"
+                  }`}
+                  aria-hidden={!isActive}
+                >
 
-            {/* Sub-headline */}
-            <p className="text-white/95 text-base sm:text-lg md:text-xl font-medium leading-relaxed max-w-2xl mx-auto mt-5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
-              Certified multi-brand electric scooters, flexible rider subscriptions, and commercial fleet solutions engineered for India's zero-emission future.
-            </p>
+                  {/* Main Hero Headline */}
+                  <h1 className="font-sans font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[76px] tracking-tight text-white leading-[1.06] drop-shadow-[0_4px_20px_rgba(0,0,0,0.7)] max-w-4xl mx-auto">
+                    {item.title}
+                  </h1>
 
-            {/* Call to Action Buttons */}
-            <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-4">
-              <button
-                type="button"
-                onClick={() => handleOpenBooking("test_ride")}
-                className="px-7 py-3 rounded-full bg-white text-slate-900 font-semibold text-sm shadow-[0_4px_24px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)] border border-slate-200/80 hover:bg-slate-50 active:scale-95 transition-all flex items-center gap-2 cursor-pointer group"
-              >
-                <span>Book a Test Ride</span>
-                <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
-              </button>
+                  {/* Sub-headline */}
+                  <p className="text-white/95 text-base sm:text-lg md:text-xl font-medium leading-relaxed max-w-2xl mx-auto mt-5 drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+                    {item.description}
+                  </p>
 
-              <button
-                type="button"
-                onClick={() => handleOpenInquiry("corporate_fleet")}
-                className="px-6 py-3 rounded-full bg-black/30 hover:bg-black/50 text-white font-semibold text-sm backdrop-blur-md border border-white/30 transition-all cursor-pointer flex items-center gap-2 shadow-sm"
-              >
-                <Truck size={15} className="text-orange-400" />
-                <span>Commercial Fleet</span>
-              </button>
-            </div>
-          </ScrollReveal>
+                  {/* Call to Action Buttons */}
+                  <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenBooking(item.bookingModel || "test_ride")}
+                      className="px-7 py-3 rounded-full bg-white text-slate-900 font-semibold text-sm shadow-[0_4px_24px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)] border border-slate-200/80 hover:bg-slate-50 active:scale-95 transition-all flex items-center gap-2 cursor-pointer group"
+                    >
+                      <span>{item.primaryCtaText || "Book a Test Ride"}</span>
+                      <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleOpenInquiry("corporate_fleet")}
+                      className="px-6 py-3 rounded-full bg-black/35 hover:bg-black/55 text-white font-semibold text-sm backdrop-blur-md border border-white/30 transition-all cursor-pointer flex items-center gap-2 shadow-sm"
+                    >
+                      <Truck size={15} className="text-orange-400" />
+                      <span>Commercial Fleet</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* BOTTOM CAROUSEL INDICATORS & SCROLL PILL */}
-        <div className="relative z-30 w-full flex flex-col items-center gap-3 pb-8 sm:pb-10 pt-8">
-
+        {/* BOTTOM SCROLL PILL */}
+        <div className="relative z-30 w-full flex flex-col items-center pb-8 sm:pb-10 pt-6">
           {/* Scroll Down Pill */}
           <a
             href="#ecosystem"
@@ -2490,23 +2458,24 @@ function MainApp({ onReplayIntro }) {
         */}
         <div id="mission-vision" className="mb-28 max-w-[1600px] mx-auto w-full">
           <ScrollReveal variant="fade-up" className="w-full">
-            <div className={`rounded-3xl p-8 sm:p-14 lg:p-20 transition-colors duration-300 ${
+            <div className={`rounded-3xl p-6 sm:p-10 md:p-12 lg:p-18 transition-colors duration-300 ${
               isLight
                 ? "bg-white shadow-[0_20px_50px_-15px_rgba(0,0,0,0.05)]"
                 : "bg-[#0B101B] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)]"
             }`}>
               
               {/* Row 1: OUR MISSION */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-10 lg:gap-16 items-center">
-                <div className="md:col-span-4 lg:col-span-4">
-                  <h3 className={`text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] uppercase ${
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 sm:gap-8 lg:gap-14 xl:gap-20">
+                <div className="w-full md:w-64 lg:w-72 xl:w-80 shrink-0">
+                  <h3 className={`text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.05] uppercase select-none ${
                     isLight ? "text-slate-900" : "text-white"
                   }`}>
-                    Our<br />Mission
+                    <span className="block whitespace-nowrap">Our</span>
+                    <span className="block whitespace-nowrap">Mission</span>
                   </h3>
                 </div>
-                <div className="md:col-span-8 lg:col-span-8">
-                  <p className={`text-base sm:text-lg lg:text-xl leading-relaxed font-normal ${
+                <div className="flex-1 min-w-0">
+                  <p className={`text-base sm:text-lg lg:text-xl leading-relaxed font-normal text-left ${
                     isLight ? "text-slate-600" : "text-slate-300"
                   }`}>
                     To accelerate India's transition to sustainable, zero-emission transportation by deploying high-uptime commercial EV fleets that create predictable investor wealth, while empowering everyday consumers with an uncompromisingly transparent EV retail journey.
@@ -2515,23 +2484,24 @@ function MainApp({ onReplayIntro }) {
               </div>
 
               {/* Elegant Horizontal Divider Line */}
-              <div className="my-10 sm:my-14 lg:my-16">
+              <div className="my-8 sm:my-12 lg:my-16">
                 <div className={`w-full h-px ${
                   isLight ? "bg-slate-200" : "bg-white/10"
                 }`} />
               </div>
 
               {/* Row 2: OUR VISION */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-10 lg:gap-16 items-center">
-                <div className="md:col-span-4 lg:col-span-4">
-                  <h3 className={`text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.05] uppercase ${
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 sm:gap-8 lg:gap-14 xl:gap-20">
+                <div className="w-full md:w-64 lg:w-72 xl:w-80 shrink-0">
+                  <h3 className={`text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.05] uppercase select-none ${
                     isLight ? "text-slate-900" : "text-white"
                   }`}>
-                    Our<br />Vision
+                    <span className="block whitespace-nowrap">Our</span>
+                    <span className="block whitespace-nowrap">Vision</span>
                   </h3>
                 </div>
-                <div className="md:col-span-8 lg:col-span-8">
-                  <p className={`text-base sm:text-lg lg:text-xl leading-relaxed font-normal ${
+                <div className="flex-1 min-w-0">
+                  <p className={`text-base sm:text-lg lg:text-xl leading-relaxed font-normal text-left ${
                     isLight ? "text-slate-600" : "text-slate-300"
                   }`}>
                     To establish GoBabyGo as the benchmark multinational mobility group in clean transportation — seamlessly uniting high-density commercial last-mile logistics, extensive battery swapping networks, and multi-brand consumer retail showrooms under an unyielding standard of integrity.
@@ -2556,7 +2526,7 @@ function MainApp({ onReplayIntro }) {
         */}
         <div
           id="ecosystem"
-          className={`scroll-mt-24 mb-28 rounded-3xl p-6 sm:p-10 md:p-14 lg:p-18 relative overflow-hidden border transition-colors duration-300 max-w-[1600px] mx-auto w-full ${
+          className={`scroll-mt-24 mb-28 rounded-3xl p-4 sm:p-8 md:p-12 lg:p-16 relative overflow-hidden border transition-colors duration-300 max-w-[1600px] mx-auto w-full ${
             isLight
               ? "bg-white/95 text-slate-900 border-slate-200/90 shadow-2xl shadow-slate-200/50"
               : "bg-[#090D17]/95 text-slate-100 border-white/10 shadow-2xl shadow-black/80 backdrop-blur-xl"
@@ -2620,17 +2590,17 @@ function MainApp({ onReplayIntro }) {
             <div id="gbgev-section" className="scroll-mt-28 space-y-12">
               
               {/* Division 01 Masthead Banner */}
-              <ScrollReveal variant="fade-up" delay={80} className={`p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 ${
+              <ScrollReveal variant="fade-up" delay={80} className={`p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 w-full max-w-full overflow-hidden ${
                 isLight
                   ? "bg-gradient-to-r from-orange-50/80 via-white to-amber-50/40 shadow-sm"
                   : "bg-gradient-to-r from-[#17100B] via-[#0E131F] to-[#0B0F19] shadow-lg shadow-black/40"
               }`}>
-                <div className="flex items-center gap-5 sm:gap-6">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border border-[#EF6C1E]/30 shadow-[0_6px_24px_rgba(239,108,30,0.15)] shrink-0 flex items-center justify-center p-3 group hover:border-[#EF6C1E] transition-all">
-                    <ExactGbgEvLogo className="h-12 sm:h-14 w-auto max-w-[85%] max-h-[85%] object-contain transition-transform duration-300 group-hover:scale-105" />
+                <div className="flex items-center gap-3.5 sm:gap-5 md:gap-6 min-w-0 w-full md:w-auto flex-1">
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl bg-white border border-[#EF6C1E]/30 shadow-[0_6px_24px_rgba(239,108,30,0.15)] shrink-0 flex items-center justify-center p-2.5 sm:p-3 group hover:border-[#EF6C1E] transition-all">
+                    <ExactGbgEvLogo className="h-8 sm:h-12 md:h-14 w-auto max-w-[85%] max-h-[85%] object-contain transition-transform duration-300 group-hover:scale-105" />
                   </div>
-                  <div className="flex flex-col justify-center">
-                    <h3 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none flex items-center gap-3">
+                  <div className="flex flex-col justify-center min-w-0 flex-1">
+                    <h3 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none flex items-center gap-2 sm:gap-3">
                       <span className={isLight ? "text-[#1D4ED8]" : "text-[#3B82F6]"}>
                         GBG
                       </span>
@@ -2638,7 +2608,7 @@ function MainApp({ onReplayIntro }) {
                         EV
                       </span>
                     </h3>
-                    <p className={`text-sm sm:text-base lg:text-lg font-semibold mt-1.5 sm:mt-2 ${
+                    <p className={`text-xs sm:text-base lg:text-lg font-semibold mt-1 sm:mt-2 leading-snug break-words ${
                       isLight ? "text-slate-600" : "text-slate-300"
                     }`}>
                       Fleet Electrification & Asset Logistics
@@ -2647,12 +2617,12 @@ function MainApp({ onReplayIntro }) {
                 </div>
 
                 {/* Division Action Button */}
-                <div className="shrink-0 w-full md:w-auto">
+                <div className="shrink-0 w-full sm:w-auto md:w-auto mt-2 sm:mt-0">
                   <a
                     href="https://gbgev.com/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#EF6C1E] to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md shadow-orange-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer w-full sm:w-auto"
+                    className="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#EF6C1E] to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-md shadow-orange-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer w-full sm:w-auto"
                   >
                     <span>Visit gbgev.com</span>
                     <ExternalLink size={15} />
@@ -2777,17 +2747,17 @@ function MainApp({ onReplayIntro }) {
             <div id="gbgx-section" className="scroll-mt-28 space-y-12">
               
               {/* Division 02 Masthead Banner */}
-              <ScrollReveal variant="fade-up" delay={80} className={`p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border ${
+              <ScrollReveal variant="fade-up" delay={80} className={`p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 border w-full max-w-full overflow-hidden ${
                 isLight
                   ? "bg-gradient-to-r from-blue-50/90 via-white to-indigo-50/40 border-blue-100 shadow-sm"
                   : "bg-gradient-to-r from-[#070D22] via-[#0B1536] to-[#060A1A] border-[#1E40FF]/25 shadow-lg shadow-black/40"
               }`}>
-                <div className="flex items-center gap-5 sm:gap-6">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-slate-950 border border-[#1E40FF]/40 shadow-[0_0_25px_rgba(30,64,255,0.35)] shrink-0 flex items-center justify-center p-3 group hover:border-[#1E40FF] transition-all">
-                    <ExactGbgxLogo className="h-7 sm:h-8 w-auto max-w-[85%] max-h-[85%] object-contain transition-transform duration-300 group-hover:scale-105" />
+                <div className="flex items-center gap-3.5 sm:gap-5 md:gap-6 min-w-0 w-full md:w-auto flex-1">
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl bg-slate-950 border border-[#1E40FF]/40 shadow-[0_0_25px_rgba(30,64,255,0.35)] shrink-0 flex items-center justify-center p-2.5 sm:p-3 group hover:border-[#1E40FF] transition-all">
+                    <ExactGbgxLogo className="h-5 sm:h-7 md:h-8 w-auto max-w-[85%] max-h-[85%] object-contain transition-transform duration-300 group-hover:scale-105" />
                   </div>
-                  <div className="flex flex-col justify-center">
-                    <h3 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none flex items-center gap-3">
+                  <div className="flex flex-col justify-center min-w-0 flex-1">
+                    <h3 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none flex items-center gap-2 sm:gap-3">
                       <span className={isLight ? "text-[#1C39BB]" : "text-[#93C5FD]"}>
                         GBG
                       </span>
@@ -2795,7 +2765,7 @@ function MainApp({ onReplayIntro }) {
                         X
                       </span>
                     </h3>
-                    <p className={`text-sm sm:text-base lg:text-lg font-semibold mt-1.5 sm:mt-2 ${
+                    <p className={`text-xs sm:text-base lg:text-lg font-semibold mt-1 sm:mt-2 leading-snug break-words ${
                       isLight ? "text-slate-600" : "text-slate-300"
                     }`}>
                       Multi-Brand EV Experience & Retail Platform
@@ -2804,12 +2774,12 @@ function MainApp({ onReplayIntro }) {
                 </div>
 
                 {/* Division Action Button */}
-                <div className="shrink-0 w-full md:w-auto">
+                <div className="shrink-0 w-full sm:w-auto md:w-auto mt-2 sm:mt-0">
                   <a
                     href="https://gbgx.in/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#1C39BB] via-[#1E40FF] to-[#2563EB] hover:from-[#152B90] hover:to-[#1C39BB] shadow-md shadow-blue-600/40 hover:shadow-[0_0_25px_rgba(30,64,255,0.6)] transition-all hover:scale-105 active:scale-95 cursor-pointer w-full sm:w-auto"
+                    className="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#1C39BB] via-[#1E40FF] to-[#2563EB] hover:from-[#152B90] hover:to-[#1C39BB] shadow-md shadow-blue-600/40 hover:shadow-[0_0_25px_rgba(30,64,255,0.6)] transition-all hover:scale-105 active:scale-95 cursor-pointer w-full sm:w-auto"
                   >
                     <span>Visit gbgx.in</span>
                     <ExternalLink size={15} />
@@ -3014,7 +2984,7 @@ function MainApp({ onReplayIntro }) {
             }`}
           >
             <Users size={14} />
-            <span>Leadership & Culture</span>
+            <span>Leadership Team</span>
           </div>
           <h2
             className={`text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight ${
@@ -3031,60 +3001,6 @@ function MainApp({ onReplayIntro }) {
             Visionary leaders and collaborative minds building extraordinary clean mobility and retail experiences across India.
           </p>
         </ScrollReveal>
-
-        {/* 3 Core Value Pillars */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-20">
-          {TEAM_PILLARS.map((pillar, index) => {
-            const icons = [
-              <Sparkles size={22} className="text-[#EF6C1E]" />,
-              <Zap size={22} className="text-[#2563EB]" />,
-              <Users size={22} className="text-[#EF6C1E]" />
-            ];
-            return (
-              <ScrollReveal key={pillar.number} variant="fade-up" delay={index * 80}>
-                <div
-                  className={`group relative rounded-3xl p-7 sm:p-8 border transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl h-full flex flex-col justify-between overflow-hidden ${
-                    isLight
-                      ? "bg-white border-slate-200/90 shadow-md shadow-slate-200/50 hover:border-orange-500/50 hover:shadow-orange-500/10"
-                      : "bg-[#0E1422] border-white/10 shadow-xl shadow-black/40 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(239,108,30,0.15)]"
-                  }`}
-                >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
-                  <div>
-                    <div className="flex items-center justify-between mb-5">
-                      <span className="text-3xl sm:text-4xl font-mono font-black text-[#EF6C1E]">
-                        {pillar.number}
-                      </span>
-                      <div
-                        className={`p-2.5 rounded-2xl border ${
-                          isLight
-                            ? "bg-orange-50 border-orange-200/80"
-                            : "bg-white/5 border-white/10"
-                        }`}
-                      >
-                        {icons[index]}
-                      </div>
-                    </div>
-                    <h3
-                      className={`text-lg sm:text-xl font-extrabold uppercase tracking-wider mb-2.5 ${
-                        isLight ? "text-slate-900" : "text-white"
-                      }`}
-                    >
-                      {pillar.title}
-                    </h3>
-                    <p
-                      className={`text-sm sm:text-base leading-relaxed ${
-                        isLight ? "text-slate-600" : "text-slate-300"
-                      }`}
-                    >
-                      {pillar.description}
-                    </p>
-                  </div>
-                </div>
-              </ScrollReveal>
-            );
-          })}
-        </div>
 
         {/* Leadership Team Showcase - Circular Headshots & Editorial Typography */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 lg:gap-14 max-w-5xl mx-auto">
@@ -3692,31 +3608,80 @@ function MainApp({ onReplayIntro }) {
 
           </div>
 
-          {/* Quick Online Action Banner */}
-          <ScrollReveal variant="fade-up" delay={300} className={`max-w-4xl mx-auto mt-12 pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left ${
-            isLight ? "border-slate-200" : "border-white/10"
-          }`}>
-            <div>
-              <h4 className={`text-base sm:text-lg font-bold ${
-                isLight ? "text-slate-900" : "text-white"
-              }`}>
-                Prefer to submit your fleet or partnership proposal online?
+          {/* Newsletter Subscription Banner */}
+          <ScrollReveal
+            variant="fade-up"
+            delay={300}
+            className={`max-w-4xl mx-auto mt-12 pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left ${
+              isLight ? "border-slate-200" : "border-white/10"
+            }`}
+          >
+            <div className="max-w-md">
+              <div className="inline-flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 rounded-full bg-[#EF6C1E] animate-pulse" />
+                <span
+                  style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
+                  className="text-xs font-bold uppercase tracking-wider text-[#EF6C1E]"
+                >
+                  Stay Connected
+                </span>
+              </div>
+              <h4
+                style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
+                className={`text-base sm:text-lg font-bold tracking-tight ${
+                  isLight ? "text-slate-900" : "text-white"
+                }`}
+              >
+                Subscribe to our EV Newsletter
               </h4>
-              <p className={`text-xs sm:text-sm ${
+              <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${
                 isLight ? "text-slate-500" : "text-slate-400"
               }`}>
-                Submit an inquiry and our corporate fleet desk in Noida will get back to you with custom terms within 24 hours.
+                Get the latest updates on green mobility trends, fleet solutions, and new electric vehicle releases delivered to your inbox.
               </p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={() => handleOpenInquiry("corporate_fleet")}
-                className="px-6 py-3 rounded-full bg-[#EF6C1E] hover:bg-orange-600 text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-md shadow-orange-500/20 active:scale-95 flex items-center gap-2 cursor-pointer"
-              >
-                <span>Submit Partner Proposal</span>
-                <ArrowRight size={16} />
-              </button>
+
+            <div className="w-full md:w-auto">
+              {newsletterStatus === "success" ? (
+                <div className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs sm:text-sm font-semibold animate-in fade-in zoom-in-95 duration-300">
+                  <CheckCircle size={16} className="text-emerald-500" />
+                  <span>Thank you for subscribing! Welcome aboard.</span>
+                </div>
+              ) : (
+                <form
+                  onSubmit={handleNewsletterSubmit}
+                  className="flex flex-col sm:flex-row items-center gap-2.5 w-full max-w-md mx-auto md:mx-0"
+                >
+                  <div className="relative w-full sm:w-72">
+                    <Mail
+                      size={16}
+                      className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
+                        isLight ? "text-slate-400" : "text-white/40"
+                      }`}
+                    />
+                    <input
+                      type="email"
+                      required
+                      value={newsletterEmail}
+                      onChange={(e) => setNewsletterEmail(e.target.value)}
+                      placeholder="Enter your email address"
+                      className={`w-full pl-11 pr-4 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm outline-none transition-all ${
+                        isLight
+                          ? "bg-slate-100 hover:bg-slate-50 focus:bg-white text-slate-800 placeholder:text-slate-400 border border-slate-200 focus:border-[#EF6C1E] focus:ring-2 focus:ring-[#EF6C1E]/20"
+                          : "bg-white/[0.07] hover:bg-white/[0.1] focus:bg-white/[0.12] text-white placeholder:text-white/40 border border-white/15 focus:border-[#EF6C1E] focus:ring-2 focus:ring-[#EF6C1E]/30"
+                      }`}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={newsletterStatus === "loading"}
+                    className="w-full sm:w-auto px-6 py-2.5 sm:py-3 rounded-full bg-[#EF6C1E] hover:bg-orange-600 active:scale-95 text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer shrink-0 disabled:opacity-60"
+                  >
+                    <span>{newsletterStatus === "loading" ? "Subscribing..." : "Subscribe"}</span>
+                    <ArrowRight size={15} />
+                  </button>
+                </form>
+              )}
             </div>
           </ScrollReveal>
         </div>
@@ -3727,87 +3692,145 @@ function MainApp({ onReplayIntro }) {
         8. FOOTER SECTION (MINIMALIST LUXURY STUDIO AESTHETIC)
         ========================================================================
       */}
-      <footer className={`relative overflow-hidden border-t transition-colors duration-300 pt-16 sm:pt-20 pb-28 sm:pb-32 md:pb-16 px-6 sm:px-12 lg:px-16 ${
-        isLight
-          ? "bg-slate-50 text-slate-800 border-slate-200"
-          : "bg-[#06080D] text-slate-200 border-white/10"
-      }`}>
-        <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-[38rem] h-48 bg-gradient-to-b rounded-full blur-3xl pointer-events-none ${
-          isLight
-            ? "from-orange-500/10 via-blue-500/5 to-transparent"
-            : "from-orange-500/10 via-cyan-500/5 to-transparent"
-        }`} />
+      {/* 
+        ========================================================================
+        8. FOOTER SECTION (STRUCTURED TO MATCH MINIMALIST STUDIO REFERENCE)
+        - Top Row: Centered Uppercase Navigation Links
+        - Divider: Subtle Horizontal Dashed Rule
+        - Center Tier: Brand Emblem + Title ("gbg cabs")
+        ========================================================================
+      */}
+      <footer
+        style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif" }}
+        className={`relative overflow-hidden border-t transition-colors duration-500 pt-8 sm:pt-10 md:pt-12 pb-24 sm:pb-28 md:pb-8 px-4 sm:px-8 lg:px-14 ${
+          isFooterLight
+            ? "bg-white text-slate-800 border-slate-200/90 shadow-[inset_0_2px_12px_rgba(0,0,0,0.03)]"
+            : "text-slate-100 border-white/10"
+        }`}
+      >
+        {/* Scenic Delivery Rider / Cityscape / GBG X Scooters Background Image Layer */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+          {isFooterLight ? (
+            <img
+              src={footerCityscapeBgImg}
+              alt=""
+              role="presentation"
+              className="w-full h-full object-cover object-[center_55%] opacity-85 mix-blend-multiply filter contrast-115 transition-all duration-700"
+            />
+          ) : (
+            <>
+              {/* GBG EV Delivery Rider Sketch */}
+              <img
+                src={footerDeliveryRiderBgImg}
+                alt=""
+                role="presentation"
+                className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ${
+                  socialTab === "gbgev" ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+              />
+              {/* GBG X 3 Scooters Lineup Sketch */}
+              <img
+                src={footerGbgxScootersBgImg}
+                alt=""
+                role="presentation"
+                className={`absolute inset-0 w-full h-full object-cover object-center transition-all duration-700 filter brightness-[0.42] contrast-[1.25] ${
+                  socialTab === "gbgx" ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+              />
+              {/* Dark atmospheric contrast scrim for GBG X mode to ensure text and switcher pop */}
+              <div
+                className={`absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-black/75 pointer-events-none transition-opacity duration-700 ${
+                  socialTab === "gbgx" ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+              />
+            </>
+          )}
+          {/* Subtle atmospheric gradient scrim for light cityscape mode */}
+          {isFooterLight && (
+            <div className="absolute inset-0 transition-colors duration-500 pointer-events-none bg-gradient-to-b from-white/20 via-transparent to-white/40" />
+          )}
+        </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center">
+        {/* Ambient Top Glow (Subtle in light mode only) */}
+        {isFooterLight && (
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[64rem] lg:w-[84rem] h-32 bg-gradient-to-b rounded-full blur-3xl pointer-events-none opacity-20 from-orange-500/10 via-blue-500/5 to-transparent" />
+        )}
+
+        <div className="relative z-10 w-full max-w-6xl xl:max-w-7xl mx-auto flex flex-col items-center text-center">
           
-          {/* Top Brand Tier: Logo */}
-          <ScrollReveal variant="fade-up" delay={50} className="flex flex-col items-center">
-            {/* Logo with Ambient Halo */}
-            <div className="relative group flex flex-col items-center">
-              <div className="absolute -inset-6 bg-gradient-to-b from-[#EF6C1E]/20 via-[#2563EB]/10 to-transparent rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-              
-              <a
-                href="#home"
-                className="relative inline-block bg-transparent focus:outline-none transition-transform duration-300 hover:scale-105"
-                aria-label="Go Baby Go Cabs"
-              >
-                <GoBabyGoLogo className="h-24 sm:h-28 md:h-32 w-auto drop-shadow-[0_8px_20px_rgba(239,108,30,0.2)]" variant={isLight ? "dark" : "light"} />
-              </a>
-
-              <p className={`mt-3 text-xs sm:text-sm font-medium tracking-wide ${
-                isLight ? "text-slate-600" : "text-slate-400"
-              }`}>
-                Powering India's Green Mobility Revolution
-              </p>
-            </div>
-          </ScrollReveal>
-
-
-          {/* Clean Thin Divider */}
-          <div className={`w-full border-t my-9 sm:my-11 ${
-            isLight ? "border-slate-200" : "border-white/10"
-          }`} />
-
-          {/* Navigation Links Row */}
-          <ScrollReveal variant="fade-up" delay={100} className="w-full">
-            <nav className={`flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-12 gap-y-3.5 text-sm sm:text-[15px] font-medium ${
-              isLight ? "text-slate-600" : "text-slate-300"
-            }`}>
-              <a href="#home" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
-                Home
-              </a>
-              <a href="#about" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
-                Ecosystem
-              </a>
-              <a href="#network" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
-                Network
-              </a>
-              <a href="#faq" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
-                FAQ
-              </a>
-              <a href="#contact" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
-                Contact Us
-              </a>
+          {/* 1. TOP NAVIGATION ROW (PLUS JAKARTA SANS TECH-FOCUSED GEOMETRIC LETTERING) */}
+          <ScrollReveal variant="fade-up" delay={40} className="w-full">
+            <nav
+              aria-label="Footer Navigation"
+              style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
+              className="w-full flex flex-wrap items-center justify-center md:justify-between gap-x-6 sm:gap-x-10 lg:gap-x-12 gap-y-3 px-2 sm:px-6"
+            >
+              {[
+                { label: "ABOUT US", id: "about" },
+                { label: "SERVICES", id: "subsidiaries" },
+                { label: "PORTFOLIO", id: "ecosystem" },
+                { label: "TEAM", id: "leaders" },
+                { label: "TESTIMONIALS", id: "faq" },
+                { label: "CONTACT US", id: "contact" }
+              ].map((item) => (
+                <a
+                  key={item.label}
+                  href={`#${item.id}`}
+                  onClick={(e) => handleNavClick(e, item.id)}
+                  className={`text-[11px] sm:text-xs font-bold tracking-[0.18em] uppercase transition-colors duration-200 ${
+                    isFooterLight
+                      ? "text-slate-600 hover:text-slate-950"
+                      : "text-slate-100 hover:text-[#EF6C1E] font-black drop-shadow-[0_2px_4px_rgba(0,0,0,1)]"
+                  }`}
+                >
+                  {item.label}
+                </a>
+              ))}
             </nav>
           </ScrollReveal>
 
-          {/* Social Media Links Section */}
-          <ScrollReveal variant="fade-up" delay={150} className="w-full my-8 sm:my-10 flex flex-col items-center text-center space-y-4">
-            <h4 className={`text-base sm:text-lg font-semibold tracking-wide ${
-              isLight ? "text-slate-900" : "text-white"
-            }`}>
-              Social Media Links
-            </h4>
+          {/* 2. SUBTLE HORIZONTAL DASHED DIVIDER (EXPANDED FULL CONTAINER WIDTH) */}
+          <div
+            className={`w-full mx-auto my-5 sm:my-6 md:my-7 border-t border-dashed transition-colors ${
+              isFooterLight ? "border-slate-300" : "border-white/20"
+            }`}
+          />
 
-            {/* Sliding Brand Switcher (GBG EV <-> GBGX) */}
+          {/* 3. CENTER ORIGINAL GBG CABS LOGO */}
+          <ScrollReveal variant="fade-up" delay={80} className="flex flex-col items-center mb-4 sm:mb-5">
+            <a
+              href="#home"
+              onClick={(e) => handleNavClick(e, "home")}
+              className="relative inline-block bg-transparent focus:outline-none transition-transform duration-300 hover:scale-105"
+              aria-label="Go Baby Go Cabs Home"
+            >
+              <GoBabyGoLogo
+                className="h-14 sm:h-16 md:h-20 w-auto drop-shadow-md"
+                isLight={isFooterLight}
+              />
+            </a>
+            <p
+              style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
+              className={`mt-1.5 sm:mt-2 text-xs sm:text-sm font-semibold tracking-wide ${
+                isFooterLight ? "text-slate-600" : "text-white font-bold drop-shadow-[0_2px_6px_rgba(0,0,0,1)]"
+              }`}
+            >
+              Powering India's Green Mobility Revolution
+            </p>
+          </ScrollReveal>
+
+          {/* 4. CIRCULAR SOCIAL MEDIA ICONS ROW (EXPANDED SIDEWARDS) */}
+          <ScrollReveal variant="fade-up" delay={120} className="flex flex-col items-center gap-3.5 sm:gap-4 mb-4 sm:mb-5">
+            {/* Sliding Brand Switcher between GBG EV and GBGX */}
             <BrandSocialSwitcher
               socialTab={socialTab}
               setSocialTab={setSocialTab}
-              isLight={isLight}
+              isLight={isFooterLight}
             />
 
+            {/* Social Icons for Selected Sub-Brand with Wider Horizontal Spacing */}
             {socialTab === "gbgev" ? (
-              <div className="flex items-center justify-center gap-6 sm:gap-7 pt-2">
+              <div className="flex items-center justify-center gap-5 sm:gap-7 md:gap-8 transition-all duration-300">
                 {/* Facebook */}
                 <a
                   href="https://www.facebook.com/Gbgev.india/"
@@ -3815,76 +3838,10 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG EV on Facebook"
                   title="GBG EV Facebook"
-                  className={`transition-all duration-200 ${
-                    isLight ? "text-slate-600 hover:text-[#EF6C1E] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
-                  }`}
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md cursor-pointer bg-slate-900/90 hover:bg-[#EF6C1E] text-white border border-slate-700/80 hover:border-transparent hover:shadow-[0_4px_16px_rgba(239,108,30,0.5)]"
                 >
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24">
-                    <mask id="fb-mask-footer">
-                      <rect width="24" height="24" fill="white" />
-                      <path d="M14.2 19v-6.5h2.2l.33-2.6h-2.53V8.25c0-.75.21-1.26 1.28-1.26h1.37V4.65c-.24-.03-1.05-.1-2-.1-1.98 0-3.33 1.21-3.33 3.43V9.9H9.2v2.6h2.15V19h2.85z" fill="black" />
-                    </mask>
-                    <circle cx="12" cy="12" r="11" fill="currentColor" mask="url(#fb-mask-footer)" />
-                  </svg>
-                </a>
-
-                {/* YouTube */}
-                <a
-                  href="https://www.youtube.com/@GBGEV"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="GBG EV on YouTube"
-                  title="GBG EV YouTube"
-                  className={`transition-all duration-200 ${
-                    isLight ? "text-slate-600 hover:text-[#EF6C1E] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
-                  }`}
-                >
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24">
-                    <mask id="yt-mask-footer-ev">
-                      <rect width="24" height="24" fill="white" />
-                      <polygon points="10,8 16,12 10,16" fill="black" />
-                    </mask>
-                    <circle cx="12" cy="12" r="11" fill="currentColor" mask="url(#yt-mask-footer-ev)" />
-                  </svg>
-                </a>
-
-                {/* Instagram */}
-                <a
-                  href="https://www.instagram.com/gbgev.india/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="GBG EV on Instagram"
-                  title="GBG EV Instagram"
-                  className={`transition-all duration-200 ${
-                    isLight ? "text-slate-600 hover:text-[#EF6C1E] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
-                  }`}
-                >
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="none">
-                    <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="currentColor" strokeWidth="2" />
-                    <circle cx="12" cy="12" r="4.2" stroke="currentColor" strokeWidth="2" />
-                    <circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" />
-                  </svg>
-                </a>
-
-                {/* LinkedIn */}
-                <a
-                  href="https://www.linkedin.com/company/gobabygoev/?viewAsMember=true"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="GBG EV on LinkedIn"
-                  title="GBG EV LinkedIn"
-                  className={`transition-all duration-200 ${
-                    isLight ? "text-slate-600 hover:text-[#EF6C1E] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
-                  }`}
-                >
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24">
-                    <mask id="li-mask-footer-ev">
-                      <rect width="24" height="24" fill="white" />
-                      <circle cx="6.8" cy="7.2" r="1.6" fill="black" />
-                      <rect x="5.4" y="10.2" width="2.8" height="8" rx="0.4" fill="black" />
-                      <path d="M10.8 10.2h2.7v1.1c.4-.7 1.3-1.3 2.5-1.3 2.5 0 3.4 1.5 3.4 3.8v4.4h-2.8v-3.8c0-1.1-.4-1.8-1.5-1.8-1.1 0-1.5.7-1.5 1.8v3.8h-2.8v-8z" fill="black" />
-                    </mask>
-                    <rect x="2" y="2" width="20" height="20" rx="4.5" fill="currentColor" mask="url(#li-mask-footer-ev)" />
+                  <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 fill-current text-white" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                 </a>
 
@@ -3895,21 +3852,59 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG EV on X"
                   title="GBG EV X"
-                  className={`transition-all duration-200 ${
-                    isLight ? "text-slate-600 hover:text-[#EF6C1E] hover:scale-110" : "text-white hover:opacity-80 hover:scale-110"
-                  }`}
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md cursor-pointer bg-slate-900/90 hover:bg-[#EF6C1E] text-white border border-slate-700/80 hover:border-transparent hover:shadow-[0_4px_16px_rgba(239,108,30,0.5)]"
                 >
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24">
-                    <mask id="x-mask-footer">
-                      <rect width="24" height="24" fill="white" />
-                      <path d="M15.5 6.5h2l-4.4 5 5.2 6.5h-4l-3.2-4.1-3.6 4.1h-2l4.7-5.4L5.3 6.5h4.1l2.9 3.8 3.2-3.8zm-.7 10.2h1.1L8.3 7.8H7.1l7.7 8.9z" fill="black" />
-                    </mask>
-                    <circle cx="12" cy="12" r="11" fill="currentColor" mask="url(#x-mask-footer)" />
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current text-white" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </a>
+
+                {/* LinkedIn */}
+                <a
+                  href="https://www.linkedin.com/company/gobabygoev/?viewAsMember=true"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="GBG EV on LinkedIn"
+                  title="GBG EV LinkedIn"
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md cursor-pointer bg-slate-900/90 hover:bg-[#EF6C1E] text-white border border-slate-700/80 hover:border-transparent hover:shadow-[0_4px_16px_rgba(239,108,30,0.5)]"
+                >
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current text-white" viewBox="0 0 24 24">
+                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                  </svg>
+                </a>
+
+                {/* Instagram */}
+                <a
+                  href="https://www.instagram.com/gbgev.india/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="GBG EV on Instagram"
+                  title="GBG EV Instagram"
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md cursor-pointer bg-slate-900/90 hover:bg-[#EF6C1E] text-white border border-slate-700/80 hover:border-transparent hover:shadow-[0_4px_16px_rgba(239,108,30,0.5)]"
+                >
+                  <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  </svg>
+                </a>
+
+                {/* YouTube */}
+                <a
+                  href="https://www.youtube.com/@GBGEV"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="GBG EV on YouTube"
+                  title="GBG EV YouTube"
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md cursor-pointer bg-slate-900/90 hover:bg-[#EF6C1E] text-white border border-slate-700/80 hover:border-transparent hover:shadow-[0_4px_16px_rgba(239,108,30,0.5)]"
+                >
+                  <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5 fill-current text-white" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                   </svg>
                 </a>
               </div>
             ) : (
-              <div className="flex items-center justify-center gap-6 sm:gap-7 pt-2">
+              <div className="flex items-center justify-center gap-5 sm:gap-7 md:gap-8 transition-all duration-300">
                 {/* YouTube */}
                 <a
                   href="https://www.youtube.com/@gbgxev"
@@ -3917,16 +3912,10 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG X on YouTube"
                   title="GBG X YouTube"
-                  className={`transition-all duration-200 ${
-                    isLight ? "text-slate-600 hover:text-[#1C39BB] hover:scale-110" : "text-white hover:text-[#1E40FF] hover:scale-110"
-                  }`}
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md cursor-pointer bg-slate-900/90 hover:bg-[#1C39BB] text-white border border-slate-700/80 hover:border-transparent hover:shadow-[0_4px_16px_rgba(28,57,187,0.5)]"
                 >
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24">
-                    <mask id="yt-mask-footer-gx">
-                      <rect width="24" height="24" fill="white" />
-                      <polygon points="10,8 16,12 10,16" fill="black" />
-                    </mask>
-                    <circle cx="12" cy="12" r="11" fill="currentColor" mask="url(#yt-mask-footer-gx)" />
+                  <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5 fill-current text-white" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                   </svg>
                 </a>
 
@@ -3937,14 +3926,12 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG X on Instagram"
                   title="GBG X Instagram"
-                  className={`transition-all duration-200 ${
-                    isLight ? "text-slate-600 hover:text-[#1C39BB] hover:scale-110" : "text-white hover:text-[#1E40FF] hover:scale-110"
-                  }`}
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md cursor-pointer bg-slate-900/90 hover:bg-[#1C39BB] text-white border border-slate-700/80 hover:border-transparent hover:shadow-[0_4px_16px_rgba(28,57,187,0.5)]"
                 >
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="none">
-                    <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="currentColor" strokeWidth="2" />
-                    <circle cx="12" cy="12" r="4.2" stroke="currentColor" strokeWidth="2" />
-                    <circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" />
+                  <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
                   </svg>
                 </a>
 
@@ -3955,67 +3942,77 @@ function MainApp({ onReplayIntro }) {
                   rel="noopener noreferrer"
                   aria-label="GBG X on LinkedIn"
                   title="GBG X LinkedIn"
-                  className={`transition-all duration-200 ${
-                    isLight ? "text-slate-600 hover:text-[#1C39BB] hover:scale-110" : "text-white hover:text-[#1E40FF] hover:scale-110"
-                  }`}
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md cursor-pointer bg-slate-900/90 hover:bg-[#1C39BB] text-white border border-slate-700/80 hover:border-transparent hover:shadow-[0_4px_16px_rgba(28,57,187,0.5)]"
                 >
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24">
-                    <mask id="li-mask-footer-gx">
-                      <rect width="24" height="24" fill="white" />
-                      <circle cx="6.8" cy="7.2" r="1.6" fill="black" />
-                      <rect x="5.4" y="10.2" width="2.8" height="8" rx="0.4" fill="black" />
-                      <path d="M10.8 10.2h2.7v1.1c.4-.7 1.3-1.3 2.5-1.3 2.5 0 3.4 1.5 3.4 3.8v4.4h-2.8v-3.8c0-1.1-.4-1.8-1.5-1.8-1.1 0-1.5.7-1.5 1.8v3.8h-2.8v-8z" fill="black" />
-                    </mask>
-                    <rect x="2" y="2" width="20" height="20" rx="4.5" fill="currentColor" mask="url(#li-mask-footer-gx)" />
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current text-white" viewBox="0 0 24 24">
+                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
                   </svg>
                 </a>
               </div>
             )}
           </ScrollReveal>
 
-          {/* Legal Links & Copyright Tier */}
-          <ScrollReveal variant="fade-up" delay={200} className="space-y-4 pt-2">
-            <div className={`flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 text-xs font-normal ${
-              isLight ? "text-slate-500" : "text-slate-400"
-            }`}>
-              <a href="#faq" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
-                Terms & Conditions
-              </a>
-              <span className={isLight ? "text-slate-300" : "text-white/20"}>|</span>
-              <a href="#faq" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
-                Privacy Policy
-              </a>
-              <span className={isLight ? "text-slate-300" : "text-white/20"}>|</span>
-              <a href="#faq" className={`transition-colors duration-200 ${isLight ? "hover:text-slate-900" : "hover:text-white"}`}>
-                Regulatory Disclosures
-              </a>
-              <span className={isLight ? "text-slate-300" : "text-white/20"}>|</span>
-              <button
-                type="button"
-                onClick={() => setAdminModalOpen(true)}
-                className={`transition-colors duration-200 inline-flex items-center gap-1.5 cursor-pointer ${
-                  isLight ? "text-slate-600 hover:text-[#EF6C1E]" : "text-slate-400 hover:text-white"
-                }`}
-                title="Fleet Command Center & Lead Administration"
-              >
-                <Lock size={12} className="text-[#EF6C1E]" />
-                <span>Fleet Command Admin</span>
-              </button>
+          {/* 5. STRUCTURED BOTTOM LEGAL & COPYRIGHT BAR (CLEAN BALANCED BASELINES) */}
+          <ScrollReveal
+            variant="fade-up"
+            delay={160}
+            style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}
+            className={`w-full mt-6 pt-5 border-t border-dashed transition-colors ${
+              isFooterLight ? "border-slate-300" : "border-white/20"
+            }`}
+          >
+            <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
+              
+              {/* Primary Left: Copyright */}
+              <p className={`text-xs font-semibold tracking-normal ${
+                isFooterLight ? "text-slate-700" : "text-slate-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+              }`}>
+                © 2026 GBG Cabs. All Rights Reserved.
+              </p>
+
+              {/* Primary Right: Legal & Administration Links */}
+              <div className={`flex flex-wrap items-center justify-center md:justify-end gap-x-3.5 sm:gap-x-4 gap-y-1.5 text-xs font-semibold shrink-0 ${
+                isFooterLight ? "text-slate-700" : "text-slate-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+              }`}>
+                <a
+                  href="#faq"
+                  onClick={(e) => handleNavClick(e, "faq")}
+                  className={`transition-colors duration-200 ${isFooterLight ? "hover:text-slate-950" : "hover:text-white"}`}
+                >
+                  Terms & Conditions
+                </a>
+                <span className={isFooterLight ? "text-slate-400" : "text-white/40"}>•</span>
+                <a
+                  href="#faq"
+                  onClick={(e) => handleNavClick(e, "faq")}
+                  className={`transition-colors duration-200 ${isFooterLight ? "hover:text-slate-950" : "hover:text-white"}`}
+                >
+                  Privacy Policy
+                </a>
+                <span className={isFooterLight ? "text-slate-400" : "text-white/40"}>•</span>
+                <button
+                  type="button"
+                  onClick={() => setAdminModalOpen(true)}
+                  className={`transition-colors duration-200 inline-flex items-center gap-1.5 cursor-pointer ${
+                    isFooterLight ? "text-slate-700 hover:text-[#EF6C1E]" : "text-slate-200 hover:text-white"
+                  }`}
+                  title="Fleet Command Center & Lead Administration"
+                >
+                  <Lock size={12} className="text-[#EF6C1E]" />
+                  <span>Fleet Command Admin</span>
+                </button>
+              </div>
+
             </div>
 
-            <div className={`flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-[11px] font-mono pt-1 ${
-              isLight ? "text-slate-500" : "text-slate-400"
+            {/* Secondary Metadata Row: Corporate CIN & Headquarters */}
+            <div className={`w-full mt-2 text-center md:text-left text-[11px] font-normal tracking-wide ${
+              isFooterLight ? "text-slate-500" : "text-slate-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
             }`}>
               <span>CIN: U60200UP2021OPC144565</span>
-              <span className={`hidden sm:inline ${isLight ? "text-slate-300" : "text-white/20"}`}>•</span>
-              <span>Corporate HQ: Tower B, The Corenthum, Sector 62, Noida, UP</span>
+              <span className="mx-2 opacity-40">•</span>
+              <span>Corporate HQ: The Corenthum, Sector 62, Noida, UP</span>
             </div>
-
-            <p className={`text-[11px] sm:text-xs font-light tracking-wide ${
-              isLight ? "text-slate-500" : "text-slate-400"
-            }`}>
-              © 2026 GoBabyGo Cabs (OPC) Private Limited. All Rights Reserved. Powering India's Green Mobility Ecosystem.
-            </p>
           </ScrollReveal>
 
         </div>

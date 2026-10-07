@@ -14,5 +14,19 @@
         "status": "active",
         "ip_address": null,
         "created_at": "2026-10-03 05:24:12"
+    },
+    {
+        "id": 3,
+        "email": "rider@example.com",
+        "source": "website_footer",
+        "status": "active",
+        "created_at": "2026-10-07 07:56:54"
+    },
+    {
+        "id": 4,
+        "email": "sharmahrishav02@gmail.com",
+        "source": "website_footer",
+        "status": "active",
+        "created_at": "2026-10-07 09:51:23"
     }
 ]
